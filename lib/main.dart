@@ -3,8 +3,8 @@ import 'package:feedback/feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:projectx/screens/home/home.dart';
 import 'package:projectx/theme/theme.dart';
-import 'package:projectx/widgets/bottom_navigation.dart';
 import 'package:provider/provider.dart';
 
 main() async {
@@ -81,7 +81,7 @@ class _MyAppState extends State<MyApp> {
               debugShowCheckedModeBanner: false,
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
-              home: const BottomNavigationContainer(),
+              home: const HomeScreen(),
             );
           });
         }),

@@ -52,7 +52,7 @@ class _AboutPageState extends State<AboutPage> {
                     child: SizedBox(
                       width: 80,
                       child: Image(
-                        image: AssetImage('assets/img/ic_launcher.png'),
+                        image: AssetImage('assets/icon/icon.png'),
                       ),
                     ),
                   ),

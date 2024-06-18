@@ -1,6 +1,6 @@
 {
     "@@locale": "pt",
-    "appName": "Project X",
+    "appName": "Wally",
     "home": "Home",
     "settings": "Ajustes",
     "about": "Sobre",
@@ -38,7 +38,7 @@
     "noUpdate": "Nenhuma atualização disponível",
     "noUpdateSub": "Tudo em dias parceiro 🤠",
     "alreadyReviewed": "Você já avaliou o app",
-    "recText": "Texto reconhecido",
-    "translatedText": "Texto traduzido",
-    "translate": "Traduzir e Falar"
+    "toType": "Digite algo...",
+    "wallyWelcome": "Eu sou o Wally, seu assistente virtual. Como posso ajudar você hoje?",
+    "weather": "Tempo em"
 }

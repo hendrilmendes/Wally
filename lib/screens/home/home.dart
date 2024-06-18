@@ -1,10 +1,13 @@
-import 'package:flutter/foundation.dart';
+import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:projectx/service/service.dart';
-import 'package:projectx/speech/speech.dart';
-import 'package:projectx/text/text.dart';
-import 'package:projectx/widgets/home/card.dart';
+import 'package:projectx/api/api.dart';
+import 'package:projectx/screens/apps/apps.dart';
+import 'package:projectx/screens/settings/settings.dart';
+import 'package:projectx/widgets/wearth/wearth.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:flutter_tts/flutter_tts.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,46 +17,136 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  final TextToSpeech _tts = TextToSpeech();
-  String _translatedText = '';
-  String _recognizedText = '';
-  String _selectedLanguage = 'pt'; // Idioma padrão
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+  final TextEditingController _controller = TextEditingController();
+  final List<ChatMessage> _messages = [];
+  final String _userPhoto = 'assets/img/user_photo.png';
+  final String _chatGptPhoto = 'assets/img/robot_photo.png';
+  final stt.SpeechToText _speech = stt.SpeechToText();
+  final FlutterTts _flutterTts = FlutterTts();
+  bool _isListening = false;
+  String _audioInput = '';
 
-  final Map<String, String> _languageAccents = {
-    'es': 'es-ES',
-    'fr': 'fr-FR',
-    'de': 'de-DE',
-    'it': 'it-IT',
-    'en': 'en-US',
-    'pt': 'pt-BR',
-  };
+  final openAI = OpenAI.instance.build(
+    token: apiKey,
+    baseOption: HttpSetup(receiveTimeout: const Duration(seconds: 6000)),
+    enableLog: true,
+  );
 
-  final List<String> _languages = ['es', 'fr', 'de', 'it', 'en', 'pt'];
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_updateButtonState);
+    _sendWelcomeMessage();
+  }
 
-  void _onSpeechResult(String text) {
+  void _updateButtonState() {
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_updateButtonState);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _sendWelcomeMessage() async {
+    final welcomeMessage = ChatMessage(
+      role: Role.chatGPT,
+      content: AppLocalizations.of(context)!.wallyWelcome,
+      name: 'Wally',
+    );
     setState(() {
-      _recognizedText = text;
+      _messages.add(welcomeMessage);
     });
   }
 
-  void _translateAndSpeak() async {
-    if (_recognizedText.isEmpty) return;
+  Future<void> _sendMessage(String messageContent,
+      {bool fromAudio = false}) async {
+    setState(() {
+      _messages.add(ChatMessage(
+          role: Role.user, content: messageContent, name: "Humano"));
+    });
 
-    try {
-      String translation =
-          await translateText(_recognizedText, _selectedLanguage);
+    if (_shouldOpenApp(messageContent)) {
+      await AppLauncher.handleAppRequest(messageContent, (chatMessage) {
+        setState(() {
+          _messages.add(chatMessage);
+        });
+      });
+    } else {
       setState(() {
-        _translatedText = translation;
+        _messages.add(ChatMessage(
+            role: Role.chatGPT,
+            content: '...',
+            name: 'Wally',
+            isLoading: true));
       });
 
-      String languageAccent = _languageAccents[_selectedLanguage] ?? 'pt-BR';
-      await _tts.speak(translation, languageAccent);
-    } catch (e) {
-      if (kDebugMode) {
-        print("Error: $e");
+      final request = ChatCompleteText(
+        messages: [
+          {'role': 'system', 'content': ''},
+          {'role': 'user', 'content': messageContent},
+        ],
+        model: GptTurboChatModel(),
+        maxToken: 200,
+      );
+
+      try {
+        final response = await openAI.onChatCompletion(request: request);
+        final gptResponse = response!.choices.first.message!.content;
+        setState(() {
+          _messages.removeLast();
+          _messages.add(ChatMessage(
+              role: Role.chatGPT, content: gptResponse, name: "Wally"));
+        });
+        if (fromAudio) {
+          await _speak(gptResponse);
+        }
+      } catch (error) {
+        setState(() {
+          _messages.removeLast();
+          _messages.add(ChatMessage(
+              role: Role.chatGPT, content: 'Error: $error', name: "Wally"));
+        });
       }
     }
+  }
+
+  bool _shouldOpenApp(String message) {
+    final lowerCaseMessage = message.toLowerCase();
+    return lowerCaseMessage.contains("abra") ||
+        lowerCaseMessage.contains("abre");
+  }
+
+  Future<void> _listen() async {
+    if (!_isListening) {
+      bool available = await _speech.initialize(
+        onStatus: (val) => setState(() => _isListening = val == 'listening'),
+        onError: (val) => setState(() => _isListening = false),
+      );
+      if (available) {
+        setState(() => _isListening = true);
+        _speech.listen(
+            onResult: (val) => setState(() {
+                  _audioInput = val.recognizedWords;
+                  if (val.finalResult) {
+                    _sendMessage(_audioInput, fromAudio: true);
+                    _audioInput = '';
+                  }
+                }));
+      }
+    } else {
+      setState(() => _isListening = false);
+      _speech.stop();
+    }
+  }
+
+  Future<void> _speak(String text) async {
+    await _flutterTts.setLanguage("pt-BR");
+    await _flutterTts.setPitch(1.0);
+    await _flutterTts.speak(text);
   }
 
   @override
@@ -61,50 +154,171 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.appName),
+        actions: <Widget>[
+          PopupMenuButton<int>(
+            itemBuilder: (context) => [
+              PopupMenuItem<int>(
+                child: Text(AppLocalizations.of(context)!.settings),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsScreen(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Expanded(child: SpeechScreen(onSpeechResult: _onSpeechResult)),
-            const SizedBox(height: 20),
-            buildTextCard(
-              context,
-              AppLocalizations.of(context)!.recText,
-              _recognizedText,
-              fontSize: 16,
-            ),
-            const SizedBox(height: 20),
-            buildTextCard(
-              context,
-              AppLocalizations.of(context)!.translatedText,
-              _translatedText,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-            const SizedBox(height: 20),
-            DropdownButton<String>(
-              value: _selectedLanguage,
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedLanguage = newValue!;
-                });
-              },
-              items: _languages.map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
+      body: Column(
+        children: [
+          const WeatherWidget(),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                final message = _messages[index];
+                return ChatBubble(
+                  role: message.role,
+                  content: message.content,
+                  name: message.name,
+                  photo: message.role == Role.user ? _userPhoto : _chatGptPhoto,
+                  isLoading: message.isLoading,
                 );
-              }).toList(),
+              },
             ),
-            const SizedBox(height: 20),
-            FilledButton.tonal(
-              onPressed: _translateAndSpeak,
-              child: Text(AppLocalizations.of(context)!.translate),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+            child: Card(
+              color: Theme.of(context).cardColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24.0),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _controller,
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          hintText: AppLocalizations.of(context)!.toType,
+                        ),
+                        onChanged: (text) {
+                          setState(() {});
+                        },
+                        keyboardType: TextInputType.text,
+                        textInputAction: TextInputAction.search,
+                      ),
+                    ),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      transitionBuilder:
+                          (Widget child, Animation<double> animation) {
+                        return ScaleTransition(scale: animation, child: child);
+                      },
+                      child: _controller.text.isEmpty
+                          ? IconButton(
+                              key: const ValueKey('mic'),
+                              icon: const Icon(Icons.mic, color: Colors.blue),
+                              onPressed: _listen,
+                            )
+                          : IconButton(
+                              key: const ValueKey('send'),
+                              icon: const Icon(Icons.send, color: Colors.blue),
+                              onPressed: () async {
+                                await _sendMessage(_controller.text);
+                                _controller.clear();
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(height: 16),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ChatMessage {
+  final Role role;
+  final String content;
+  final String name;
+  final bool isLoading;
+
+  ChatMessage({
+    required this.role,
+    required this.content,
+    required this.name,
+    this.isLoading = false,
+  });
+
+  Map<String, String> toMap() {
+    return {'role': role.toString(), 'content': content, 'name': name};
+  }
+}
+
+enum Role {
+  user,
+  chatGPT,
+}
+
+class ChatBubble extends StatelessWidget {
+  final Role role;
+  final String content;
+  final String name;
+  final String photo;
+  final bool isLoading;
+
+  const ChatBubble({
+    super.key,
+    required this.role,
+    required this.content,
+    required this.name,
+    required this.photo,
+    this.isLoading = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment:
+          role == Role.user ? Alignment.centerRight : Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Container(
+          decoration: BoxDecoration(
+            color: role == Role.user ? Colors.blue : Colors.grey,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(name,
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              CircleAvatar(
+                radius: 16,
+                backgroundImage: AssetImage(photo),
+              ),
+              const SizedBox(height: 4),
+              isLoading
+                  ? const SpinKitThreeBounce(
+                      color: Colors.white,
+                      size: 20.0,
+                    )
+                  : Text(content, style: const TextStyle(color: Colors.white)),
+            ],
+          ),
         ),
       ),
     );
