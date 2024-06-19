@@ -4,7 +4,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:projectx/api/api.dart';
 import 'package:projectx/screens/apps/apps.dart';
 import 'package:projectx/screens/settings/settings.dart';
-import 'package:projectx/widgets/wearth/wearth.dart';
+import 'package:projectx/screens/weather/weather.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -27,17 +27,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool _isListening = false;
   String _audioInput = '';
 
-  final openAI = OpenAI.instance.build(
-    token: apiKey,
-    baseOption: HttpSetup(receiveTimeout: const Duration(seconds: 6000)),
-    enableLog: true,
-  );
+  late final OpenAI openAI;
 
   @override
   void initState() {
     super.initState();
     _controller.addListener(_updateButtonState);
     _sendWelcomeMessage();
+
+    openAI = OpenAI.instance.build(
+      token: apiKey,
+      baseOption: HttpSetup(receiveTimeout: const Duration(seconds: 6000)),
+      enableLog: true,
+    );
   }
 
   void _updateButtonState() {
@@ -52,13 +54,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _sendWelcomeMessage() async {
-    final welcomeMessage = ChatMessage(
-      role: Role.chatGPT,
-      content: AppLocalizations.of(context)!.wallyWelcome,
-      name: 'Wally',
-    );
-    setState(() {
-      _messages.add(welcomeMessage);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final welcomeMessage = ChatMessage(
+        role: Role.chatGPT,
+        content: AppLocalizations.of(context)!.wallyWelcome,
+        name: 'Wally',
+      );
+      setState(() {
+        _messages.add(welcomeMessage);
+      });
     });
   }
 
@@ -66,7 +70,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       {bool fromAudio = false}) async {
     setState(() {
       _messages.add(ChatMessage(
-          role: Role.user, content: messageContent, name: "Humano"));
+        role: Role.user,
+        content: messageContent,
+        name: "Humano",
+      ));
     });
 
     if (_shouldOpenApp(messageContent)) {
@@ -78,10 +85,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     } else {
       setState(() {
         _messages.add(ChatMessage(
-            role: Role.chatGPT,
-            content: '...',
-            name: 'Wally',
-            isLoading: true));
+          role: Role.chatGPT,
+          content: '...',
+          name: 'Wally',
+          isLoading: true,
+        ));
       });
 
       final request = ChatCompleteText(
@@ -99,7 +107,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         setState(() {
           _messages.removeLast();
           _messages.add(ChatMessage(
-              role: Role.chatGPT, content: gptResponse, name: "Wally"));
+            role: Role.chatGPT,
+            content: gptResponse,
+            name: "Wally",
+          ));
         });
         if (fromAudio) {
           await _speak(gptResponse);
@@ -108,7 +119,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         setState(() {
           _messages.removeLast();
           _messages.add(ChatMessage(
-              role: Role.chatGPT, content: 'Error: $error', name: "Wally"));
+            role: Role.chatGPT,
+            content: 'Error: $error',
+            name: "Wally",
+          ));
         });
       }
     }
@@ -129,13 +143,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (available) {
         setState(() => _isListening = true);
         _speech.listen(
-            onResult: (val) => setState(() {
-                  _audioInput = val.recognizedWords;
-                  if (val.finalResult) {
-                    _sendMessage(_audioInput, fromAudio: true);
-                    _audioInput = '';
-                  }
-                }));
+          onResult: (val) => setState(() {
+            _audioInput = val.recognizedWords;
+            if (val.finalResult) {
+              _sendMessage(_audioInput, fromAudio: true);
+              _audioInput = '';
+            }
+          }),
+        );
       }
     } else {
       setState(() => _isListening = false);
@@ -154,27 +169,49 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.appName),
-        actions: <Widget>[
-          PopupMenuButton<int>(
-            itemBuilder: (context) => [
-              PopupMenuItem<int>(
-                child: Text(AppLocalizations.of(context)!.settings),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SettingsScreen(),
-                    ),
-                  );
-                },
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              child: Text(
+                AppLocalizations.of(context)!.appName,
+                style: const TextStyle(
+                  fontSize: 24,
+                ),
               ),
-            ],
-          ),
-        ],
+            ),
+            ListTile(
+              leading: const Icon(Icons.wb_sunny_outlined),
+              title: Text(AppLocalizations.of(context)!.weather),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const WeatherScreen(),
+                  ),
+                );
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.settings_outlined),
+              title: Text(AppLocalizations.of(context)!.settings),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsScreen(),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
       body: Column(
         children: [
-          const WeatherWidget(),
           Expanded(
             child: ListView.builder(
               itemCount: _messages.length,
@@ -302,9 +339,13 @@ class ChatBubble extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(name,
-                  style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold)),
+              Text(
+                name,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 4),
               CircleAvatar(
                 radius: 16,
@@ -316,7 +357,10 @@ class ChatBubble extends StatelessWidget {
                       color: Colors.white,
                       size: 20.0,
                     )
-                  : Text(content, style: const TextStyle(color: Colors.white)),
+                  : Text(
+                      content,
+                      style: const TextStyle(color: Colors.white),
+                    ),
             ],
           ),
         ),

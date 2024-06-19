@@ -1,12 +1,11 @@
 {
     "@@locale": "pt",
     "appName": "Wally",
-    "home": "Home",
     "settings": "Ajustes",
     "about": "Sobre",
     "ok": "OK",
     "copyright": "Todos os direitos reservados",
-    "appDesc": "Tradutor simples que converte sua voz em texto, podendo também ouvir a tradução em outro idiomas",
+    "appDesc": "Um assistente virtual",
     "version": "Versão",
     "privacy": "Política de Privacidade",
     "privacySub": "Termos que garantem a sua privacidade",
@@ -39,6 +38,11 @@
     "noUpdateSub": "Tudo em dias parceiro 🤠",
     "alreadyReviewed": "Você já avaliou o app",
     "toType": "Digite algo...",
-    "wallyWelcome": "Eu sou o Wally, seu assistente virtual. Como posso ajudar você hoje?",
-    "weather": "Tempo em"
+    "wallyWelcome": "Eu sou Wally, seu assistente virtual. Como posso ajudar você hoje?",
+    "weather": "Clima",
+    "weatherTo": "Tempo em",
+    "description": "Descrição",
+    "temperature": "Temperatura",
+    "humidity": "Umidade do Ar",
+    "windSpeed": "Velocidade dos Ventos"
 }

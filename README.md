@@ -1,5 +1,5 @@
 ## Project X
-Tradutor simples que converte sua voz em texto, podendo também ouvir a tradução em outro idiomas
+Um assistente virtual
 
 ### Screenshots
 
@@ -19,7 +19,7 @@ Tradutor simples que converte sua voz em texto, podendo também ouvir a traduç�
 ##
 
 ### Recursos:
-
+* Integração ChatGPT
 ##
 
 ### O que há de novo?

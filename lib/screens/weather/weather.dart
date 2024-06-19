@@ -7,23 +7,40 @@ import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
 import 'package:projectx/api/api.dart';
 
-class WeatherWidget extends StatefulWidget {
-  const WeatherWidget({super.key});
+class WeatherScreen extends StatefulWidget {
+  const WeatherScreen({super.key});
 
   @override
   // ignore: library_private_types_in_public_api
-  _WeatherWidgetState createState() => _WeatherWidgetState();
+  _WeatherScreenState createState() => _WeatherScreenState();
 }
 
-class _WeatherWidgetState extends State<WeatherWidget> {
+class _WeatherScreenState extends State<WeatherScreen>
+    with SingleTickerProviderStateMixin {
   String _weatherData = '';
   String _cityName = '';
-  bool _isLoading = true;  // Indica se está carregando
+  bool _isLoading = true;
+  late AnimationController _controller;
+  late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+    _animation = Tween<double>(begin: 0, end: 1).animate(_controller)
+      ..addListener(() {
+        setState(() {});
+      });
     _requestLocationPermission();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   Future<void> _requestLocationPermission() async {
@@ -118,7 +135,7 @@ class _WeatherWidgetState extends State<WeatherWidget> {
         setState(() {
           _cityName = cityName;
         });
-        _getWeatherData(_cityName);
+        _getLocationKey(latitude, longitude);
       } else {
         setState(() {
           _weatherData = 'Error: ${response.statusCode}';
@@ -139,33 +156,84 @@ class _WeatherWidgetState extends State<WeatherWidget> {
     }
   }
 
-  Future<void> _getWeatherData(String cityName) async {
+  Future<void> _getLocationKey(double latitude, double longitude) async {
     try {
-      if (kDebugMode) {
-        print('Fetching weather data for city: $cityName');
-      }
-      final response = await http.get(Uri.parse(
-          'https://api.openweathermap.org/data/2.5/weather?q=$cityName&units=metric&appid=$apiKeyWearth'));
+      String apiUrl =
+          'https://dataservice.accuweather.com/locations/v1/cities/geoposition/search?apikey=$apiKeyWearth&q=$latitude,$longitude';
+
+      final response = await http.get(Uri.parse(apiUrl));
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
+        if (jsonData != null && jsonData['Key'] != null) {
+          String locationKey = jsonData['Key'];
+          _getWeatherData(locationKey);
+        } else {
+          setState(() {
+            _weatherData = 'Error: No location key found';
+            _isLoading = false;
+          });
+          if (kDebugMode) {
+            print('Error: No location key found in the response');
+          }
+        }
+      } else {
         setState(() {
-          _weatherData = '''
-City: $cityName
-Description: ${jsonData['weather'][0]['description']}
-Temperature: ${jsonData['main']['temp']}°C
-Humidity: ${jsonData['main']['humidity']}%
-Wind Speed: ${jsonData['wind']['speed']} m/s
-          ''';
+          _weatherData = 'Error: ${response.statusCode}';
           _isLoading = false;
         });
+        if (kDebugMode) {
+          print('Error getting location key: ${response.statusCode}');
+        }
+      }
+    } catch (e) {
+      setState(() {
+        _weatherData = 'Error: $e';
+        _isLoading = false;
+      });
+      if (kDebugMode) {
+        print('Error getting location key: $e');
+      }
+    }
+  }
+
+  Future<void> _getWeatherData(String locationKey) async {
+    try {
+      String apiUrl =
+          'https://dataservice.accuweather.com/currentconditions/v1/$locationKey?apikey=$apiKeyWearth';
+
+      final response = await http.get(Uri.parse(apiUrl));
+
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        if (jsonData != null && jsonData.isNotEmpty) {
+          final weatherData = jsonData[0];
+          setState(() {
+            _weatherData = '''
+${AppLocalizations.of(context)!.description}: ${weatherData['WeatherText'] ?? 'N/A'}
+${AppLocalizations.of(context)!.temperature}: ${weatherData['Temperature']['Metric']['Value'] ?? 'N/A'}°C
+${AppLocalizations.of(context)!.humidity}: ${weatherData['RelativeHumidity'] ?? 'N/A'}%
+${AppLocalizations.of(context)!.windSpeed}: ${weatherData['Wind']?['Speed']?['Metric']?['Value'] ?? 'N/A'} m/s
+            ''';
+            _isLoading = false;
+          });
+          _controller.forward();
+        } else {
+          setState(() {
+            _weatherData = 'Error: No weather data found';
+            _isLoading = false;
+          });
+          if (kDebugMode) {
+            print('Error: No weather data found in the response');
+          }
+        }
       } else if (response.statusCode == 404) {
         setState(() {
           _weatherData = 'Error: The requested resource was not found.';
           _isLoading = false;
         });
         if (kDebugMode) {
-          print('Weather data not found for city: $cityName');
+          print('Weather data not found for location key: $locationKey');
         }
       } else {
         setState(() {
@@ -197,29 +265,43 @@ Wind Speed: ${jsonData['wind']['speed']} m/s
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 5,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      child: Padding(
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context)!.weather),
+      ),
+      body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Stack(
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                Text(
-                  '${AppLocalizations.of(context)!.weather} $_cityName',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(_weatherData),
-              ],
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            FadeTransition(
+              opacity: _animation,
+              child: const Icon(
+                Icons.cloud,
+                size: 48,
+                color: Colors.blue,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '${AppLocalizations.of(context)!.weatherTo} $_cityName',
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _weatherData,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 18,
+              ),
             ),
             if (_isLoading)
-              const Center(
+              const Padding(
+                padding: EdgeInsets.only(top: 16),
                 child: CircularProgressIndicator(),
               ),
           ],
