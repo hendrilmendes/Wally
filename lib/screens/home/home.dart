@@ -27,25 +27,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool _isListening = false;
   String _audioInput = '';
 
-  late OpenAI openAI;
+  Future<OpenAI>? openAIFuture;
 
   @override
   void initState() {
     super.initState();
     _controller.addListener(_updateButtonState);
-    _initializeOpenAI();
+    openAIFuture = _initializeOpenAI();
     _sendWelcomeMessage();
   }
 
-  void _initializeOpenAI() async {
+  Future<OpenAI> _initializeOpenAI() async {
     await dotenv.load();
     final apiKey = dotenv.env['OPENAI_API_KEY'];
-    
+
     if (apiKey == null) {
       throw Exception("OPENAI_API_KEY não foi configurada no arquivo .env");
     }
 
-    openAI = OpenAI.instance.build(
+    return OpenAI.instance.build(
       token: apiKey,
       baseOption: HttpSetup(receiveTimeout: const Duration(seconds: 6000)),
       enableLog: true,
@@ -119,6 +119,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       );
 
       try {
+        final openAI = await openAIFuture!;
         final response = await openAI.onChatCompletion(request: request);
         final gptResponse = response!.choices.first.message!.content;
         setState(() {
@@ -235,75 +236,96 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ],
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final message = _messages[index];
-                return ChatBubble(
-                  role: message.role,
-                  content: message.content,
-                  name: message.name,
-                  photo: message.role == Role.user ? _userPhoto : _chatGptPhoto,
-                  isLoading: message.isLoading,
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-            child: Card(
-              color: Theme.of(context).cardColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24.0),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _controller,
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          hintText: AppLocalizations.of(context)!.toType,
-                        ),
-                        onChanged: (text) {
-                          setState(() {});
-                        },
-                        keyboardType: TextInputType.text,
-                        textInputAction: TextInputAction.search,
+      body: FutureBuilder<OpenAI>(
+        future: openAIFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          } else if (snapshot.hasError) {
+            return Center(
+              child: Text('Error: ${snapshot.error}'),
+            );
+          } else {
+            return Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) {
+                      final message = _messages[index];
+                      return ChatBubble(
+                        role: message.role,
+                        content: message.content,
+                        name: message.name,
+                        photo: message.role == Role.user
+                            ? _userPhoto
+                            : _chatGptPhoto,
+                        isLoading: message.isLoading,
+                      );
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8.0, vertical: 8.0),
+                  child: Card(
+                    color: Theme.of(context).cardColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24.0),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _controller,
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                hintText: AppLocalizations.of(context)!.toType,
+                              ),
+                              onChanged: (text) {
+                                setState(() {});
+                              },
+                              keyboardType: TextInputType.text,
+                              textInputAction: TextInputAction.search,
+                            ),
+                          ),
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            transitionBuilder:
+                                (Widget child, Animation<double> animation) {
+                              return ScaleTransition(
+                                  scale: animation, child: child);
+                            },
+                            child: _controller.text.isEmpty
+                                ? IconButton(
+                                    key: const ValueKey('mic'),
+                                    icon: const Icon(Icons.mic,
+                                        color: Colors.blue),
+                                    onPressed: _listen,
+                                  )
+                                : IconButton(
+                                    key: const ValueKey('send'),
+                                    icon: const Icon(Icons.send,
+                                        color: Colors.blue),
+                                    onPressed: () async {
+                                      await _sendMessage(_controller.text);
+                                      _controller.clear();
+                                    },
+                                  ),
+                          ),
+                        ],
                       ),
                     ),
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      transitionBuilder:
-                          (Widget child, Animation<double> animation) {
-                        return ScaleTransition(scale: animation, child: child);
-                      },
-                      child: _controller.text.isEmpty
-                          ? IconButton(
-                              key: const ValueKey('mic'),
-                              icon: const Icon(Icons.mic, color: Colors.blue),
-                              onPressed: _listen,
-                            )
-                          : IconButton(
-                              key: const ValueKey('send'),
-                              icon: const Icon(Icons.send, color: Colors.blue),
-                              onPressed: () async {
-                                await _sendMessage(_controller.text);
-                                _controller.clear();
-                              },
-                            ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ),
-        ],
+              ],
+            );
+          }
+        },
       ),
     );
   }
