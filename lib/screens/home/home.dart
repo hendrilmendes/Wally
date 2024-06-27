@@ -30,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool _isListening = false;
   String _audioInput = '';
 
-  late OpenAI openAI;
+  late OpenAI? openAI;
   late Future<void> _openAIInitialized;
 
   @override
@@ -92,8 +92,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     });
   }
 
-  Future<void> _sendMessage(String messageContent,
-      {bool fromAudio = false}) async {
+  Future<void> _sendMessage(String messageContent, {bool fromAudio = false}) async {
+    if (openAI == null) {
+      await _openAIInitialized;
+    }
+
     setState(() {
       _messages.add(ChatMessage(
         role: Role.user,
@@ -110,6 +113,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       });
     } else if (_shouldCheckWeather(messageContent)) {
       Navigator.push(
+        // ignore: use_build_context_synchronously
         context,
         MaterialPageRoute(
           builder: (context) => const WeatherScreen(),
@@ -135,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       );
 
       try {
-        final response = await openAI.onChatCompletion(request: request);
+        final response = await openAI!.onChatCompletion(request: request);
         final gptResponse = response!.choices.first.message!.content;
         setState(() {
           _messages.removeLast();
