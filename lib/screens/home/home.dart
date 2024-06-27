@@ -58,11 +58,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       throw Exception("OPENAI_API_KEY não foi configurada corretamente.");
     }
 
-    openAI = OpenAI.instance.build(
-      token: apiKey,
-      baseOption: HttpSetup(receiveTimeout: const Duration(seconds: 6000)),
-      enableLog: true,
-    );
+    setState(() {
+      openAI = OpenAI.instance.build(
+        token: apiKey!,
+        baseOption: HttpSetup(receiveTimeout: const Duration(seconds: 6000)),
+        enableLog: true,
+      );
+    });
   }
 
   void _updateButtonState() {
@@ -132,10 +134,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       );
 
       try {
-        if (openAI == null) {
-          throw Exception('OpenAI não foi inicializado corretamente.');
-        }
-
         final response = await openAI.onChatCompletion(request: request);
         final gptResponse = response!.choices.first.message!.content;
         setState(() {
