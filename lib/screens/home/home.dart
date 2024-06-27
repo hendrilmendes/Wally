@@ -27,13 +27,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool _isListening = false;
   String _audioInput = '';
 
-  Future<OpenAI>? openAIFuture;
+  late Future<OpenAI> _openAIFuture;
 
   @override
   void initState() {
     super.initState();
     _controller.addListener(_updateButtonState);
-    openAIFuture = _initializeOpenAI();
+    _openAIFuture = _initializeOpenAI();
     _sendWelcomeMessage();
   }
 
@@ -109,6 +109,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ));
       });
 
+      final openAI = await _openAIFuture;
       final request = ChatCompleteText(
         messages: [
           {'role': 'system', 'content': ''},
@@ -119,7 +120,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       );
 
       try {
-        final openAI = await openAIFuture!;
         final response = await openAI.onChatCompletion(request: request);
         final gptResponse = response!.choices.first.message!.content;
         setState(() {
@@ -192,63 +192,67 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.appName),
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            DrawerHeader(
-              child: Text(
-                AppLocalizations.of(context)!.appName,
-                style: const TextStyle(
-                  fontSize: 24,
-                ),
+    return FutureBuilder<OpenAI>(
+      future: _openAIFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        } else if (snapshot.hasError) {
+          return Scaffold(
+            body: Center(
+              child: Text("Error: ${snapshot.error}"),
+            ),
+          );
+        } else {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(AppLocalizations.of(context)!.appName),
+            ),
+            drawer: Drawer(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: <Widget>[
+                  DrawerHeader(
+                    child: Text(
+                      AppLocalizations.of(context)!.appName,
+                      style: const TextStyle(
+                        fontSize: 24,
+                      ),
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.wb_sunny_outlined),
+                    title: Text(AppLocalizations.of(context)!.weather),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const WeatherScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(Icons.settings_outlined),
+                    title: Text(AppLocalizations.of(context)!.settings),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
-            ListTile(
-              leading: const Icon(Icons.wb_sunny_outlined),
-              title: Text(AppLocalizations.of(context)!.weather),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const WeatherScreen(),
-                  ),
-                );
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.settings_outlined),
-              title: Text(AppLocalizations.of(context)!.settings),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SettingsScreen(),
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-      body: FutureBuilder<OpenAI>(
-        future: openAIFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Text('Error: ${snapshot.error}'),
-            );
-          } else {
-            return Column(
+            body: Column(
               children: [
                 Expanded(
                   child: ListView.builder(
@@ -323,10 +327,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                 ),
               ],
-            );
-          }
-        },
-      ),
+            ),
+          );
+        }
+      },
     );
   }
 }
