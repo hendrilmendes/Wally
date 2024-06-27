@@ -43,7 +43,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void _initializeOpenAI() async {
     String? apiKey;
 
-    if (Platform.isAndroid || Platform.isIOS|| Platform.isMacOS|| Platform.isWindows|| Platform.isLinux) {
+    if (Platform.isAndroid ||
+        Platform.isIOS ||
+        Platform.isMacOS ||
+        Platform.isWindows ||
+        Platform.isLinux) {
       await dotenv.load();
       apiKey = dotenv.env['OPENAI_API_KEY'];
     } else if (kIsWeb) {
@@ -128,6 +132,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       );
 
       try {
+        if (openAI == null) {
+          throw Exception('OpenAI não foi inicializado corretamente.');
+        }
+
         final response = await openAI.onChatCompletion(request: request);
         final gptResponse = response!.choices.first.message!.content;
         setState(() {
