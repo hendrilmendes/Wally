@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -38,11 +41,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   void _initializeOpenAI() async {
-    await dotenv.load();
-    final apiKey = dotenv.env['OPENAI_API_KEY'];
-    
+    String? apiKey;
+
+    if (Platform.isAndroid || Platform.isIOS|| Platform.isMacOS|| Platform.isWindows|| Platform.isLinux) {
+      await dotenv.load();
+      apiKey = dotenv.env['OPENAI_API_KEY'];
+    } else if (kIsWeb) {
+      apiKey = const String.fromEnvironment('OPENAI_API_KEY');
+    }
+
     if (apiKey == null) {
-      throw Exception("OPENAI_API_KEY não foi configurada no arquivo .env");
+      throw Exception("OPENAI_API_KEY não foi configurada corretamente.");
     }
 
     openAI = OpenAI.instance.build(

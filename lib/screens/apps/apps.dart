@@ -11,7 +11,7 @@ class AppLauncher {
       String message, Function(ChatMessage) addMessage) async {
 
 
-    if (kIsWeb || !Platform.isIOS || !Platform.isWindows || !Platform.isLinux) {
+    if (kIsWeb || !Platform.isIOS || !Platform.isWindows || !Platform.isLinux|| Platform.isMacOS) {
       addMessage(ChatMessage(
         role: Role.chatGPT,
         content: "Esta funcionalidade está disponível apenas no Android.",
