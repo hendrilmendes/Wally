@@ -27,25 +27,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool _isListening = false;
   String _audioInput = '';
 
-  late Future<OpenAI> _openAIFuture;
+  late OpenAI openAI;
 
   @override
   void initState() {
     super.initState();
     _controller.addListener(_updateButtonState);
-    _openAIFuture = _initializeOpenAI();
+    _initializeOpenAI();
     _sendWelcomeMessage();
   }
 
-  Future<OpenAI> _initializeOpenAI() async {
+  void _initializeOpenAI() async {
     await dotenv.load();
     final apiKey = dotenv.env['OPENAI_API_KEY'];
-
+    
     if (apiKey == null) {
       throw Exception("OPENAI_API_KEY não foi configurada no arquivo .env");
     }
 
-    return OpenAI.instance.build(
+    openAI = OpenAI.instance.build(
       token: apiKey,
       baseOption: HttpSetup(receiveTimeout: const Duration(seconds: 6000)),
       enableLog: true,
@@ -109,7 +109,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ));
       });
 
-      final openAI = await _openAIFuture;
       final request = ChatCompleteText(
         messages: [
           {'role': 'system', 'content': ''},
@@ -192,145 +191,120 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<OpenAI>(
-      future: _openAIFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
-        } else if (snapshot.hasError) {
-          return Scaffold(
-            body: Center(
-              child: Text("Error: ${snapshot.error}"),
-            ),
-          );
-        } else {
-          return Scaffold(
-            appBar: AppBar(
-              title: Text(AppLocalizations.of(context)!.appName),
-            ),
-            drawer: Drawer(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: <Widget>[
-                  DrawerHeader(
-                    child: Text(
-                      AppLocalizations.of(context)!.appName,
-                      style: const TextStyle(
-                        fontSize: 24,
-                      ),
-                    ),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.wb_sunny_outlined),
-                    title: Text(AppLocalizations.of(context)!.weather),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const WeatherScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  const Divider(),
-                  ListTile(
-                    leading: const Icon(Icons.settings_outlined),
-                    title: Text(AppLocalizations.of(context)!.settings),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SettingsScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context)!.appName),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              child: Text(
+                AppLocalizations.of(context)!.appName,
+                style: const TextStyle(
+                  fontSize: 24,
+                ),
               ),
             ),
-            body: Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _messages.length,
-                    itemBuilder: (context, index) {
-                      final message = _messages[index];
-                      return ChatBubble(
-                        role: message.role,
-                        content: message.content,
-                        name: message.name,
-                        photo: message.role == Role.user
-                            ? _userPhoto
-                            : _chatGptPhoto,
-                        isLoading: message.isLoading,
-                      );
-                    },
+            ListTile(
+              leading: const Icon(Icons.wb_sunny_outlined),
+              title: Text(AppLocalizations.of(context)!.weather),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const WeatherScreen(),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8.0, vertical: 8.0),
-                  child: Card(
-                    color: Theme.of(context).cardColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24.0),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _controller,
-                              decoration: InputDecoration(
-                                border: InputBorder.none,
-                                hintText: AppLocalizations.of(context)!.toType,
-                              ),
-                              onChanged: (text) {
-                                setState(() {});
-                              },
-                              keyboardType: TextInputType.text,
-                              textInputAction: TextInputAction.search,
-                            ),
-                          ),
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 300),
-                            transitionBuilder:
-                                (Widget child, Animation<double> animation) {
-                              return ScaleTransition(
-                                  scale: animation, child: child);
-                            },
-                            child: _controller.text.isEmpty
-                                ? IconButton(
-                                    key: const ValueKey('mic'),
-                                    icon: const Icon(Icons.mic,
-                                        color: Colors.blue),
-                                    onPressed: _listen,
-                                  )
-                                : IconButton(
-                                    key: const ValueKey('send'),
-                                    icon: const Icon(Icons.send,
-                                        color: Colors.blue),
-                                    onPressed: () async {
-                                      await _sendMessage(_controller.text);
-                                      _controller.clear();
-                                    },
-                                  ),
-                          ),
-                        ],
+                );
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.settings_outlined),
+              title: Text(AppLocalizations.of(context)!.settings),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsScreen(),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                final message = _messages[index];
+                return ChatBubble(
+                  role: message.role,
+                  content: message.content,
+                  name: message.name,
+                  photo: message.role == Role.user ? _userPhoto : _chatGptPhoto,
+                  isLoading: message.isLoading,
+                );
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+            child: Card(
+              color: Theme.of(context).cardColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24.0),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _controller,
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          hintText: AppLocalizations.of(context)!.toType,
+                        ),
+                        onChanged: (text) {
+                          setState(() {});
+                        },
+                        keyboardType: TextInputType.text,
+                        textInputAction: TextInputAction.search,
                       ),
                     ),
-                  ),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      transitionBuilder:
+                          (Widget child, Animation<double> animation) {
+                        return ScaleTransition(scale: animation, child: child);
+                      },
+                      child: _controller.text.isEmpty
+                          ? IconButton(
+                              key: const ValueKey('mic'),
+                              icon: const Icon(Icons.mic, color: Colors.blue),
+                              onPressed: _listen,
+                            )
+                          : IconButton(
+                              key: const ValueKey('send'),
+                              icon: const Icon(Icons.send, color: Colors.blue),
+                              onPressed: () async {
+                                await _sendMessage(_controller.text);
+                                _controller.clear();
+                              },
+                            ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          );
-        }
-      },
+          ),
+        ],
+      ),
     );
   }
 }
