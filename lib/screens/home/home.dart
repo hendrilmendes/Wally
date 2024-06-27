@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool _isListening = false;
   String _audioInput = '';
 
-  late OpenAI? openAI;
+  OpenAI? openAI;
   late Future<void> _openAIInitialized;
 
   @override
@@ -44,15 +42,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Future<void> _initializeOpenAI() async {
     String? apiKey;
 
-    if (Platform.isAndroid ||
-        Platform.isIOS ||
-        Platform.isMacOS ||
-        Platform.isWindows ||
-        Platform.isLinux) {
+    if (kIsWeb) {
+      apiKey = const String.fromEnvironment('OPENAI_API_KEY');
+    } else {
       await dotenv.load();
       apiKey = dotenv.env['OPENAI_API_KEY'];
-    } else if (kIsWeb) {
-      apiKey = const String.fromEnvironment('OPENAI_API_KEY');
     }
 
     if (apiKey == null) {
@@ -92,7 +86,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     });
   }
 
-  Future<void> _sendMessage(String messageContent, {bool fromAudio = false}) async {
+  Future<void> _sendMessage(String messageContent,
+      {bool fromAudio = false}) async {
     if (openAI == null) {
       await _openAIInitialized;
     }
@@ -140,24 +135,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
       try {
         final response = await openAI!.onChatCompletion(request: request);
-        final gptResponse = response!.choices.first.message!.content;
-        setState(() {
-          _messages.removeLast();
-          _messages.add(ChatMessage(
-            role: Role.chatGPT,
-            content: gptResponse,
-            name: "Wally",
-          ));
-        });
-        if (fromAudio) {
-          await _speak(gptResponse);
+        if (response != null && response.choices.isNotEmpty) {
+          final gptResponse = response.choices.first.message!.content;
+          setState(() {
+            _messages.removeLast();
+            _messages.add(ChatMessage(
+              role: Role.chatGPT,
+              content: gptResponse,
+              name: "Wally",
+            ));
+          });
+          if (fromAudio) {
+            await _speak(gptResponse);
+          }
+        } else {
+          throw Exception("Resposta vazia da API do OpenAI.");
         }
       } catch (error) {
         setState(() {
           _messages.removeLast();
           _messages.add(ChatMessage(
             role: Role.chatGPT,
-            content: 'Error: $error',
+            content: 'Erro ao processar resposta: $error',
             name: "Wally",
           ));
         });
