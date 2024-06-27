@@ -2,7 +2,7 @@ name: projectx
 description: "Um assistente virtual"
 publish_to: 'none'
 
-version: 0.0.8-alpha+9
+version: 0.0.13-alpha+14
 
 environment:
   sdk: '>=3.4.3 <4.0.0'
@@ -14,8 +14,14 @@ dependencies:
 # Chat GPT
   chat_gpt_sdk: ^3.0.9
 
+# DoEnv
+  flutter_dotenv: ^5.1.0
+
 # Dynamic Colors
   dynamic_color: ^1.7.0
+
+# Device Apps
+  device_apps: ^2.2.0
 
 # Email
   flutter_email_sender: ^6.0.3
@@ -66,6 +72,9 @@ dependencies:
 # Url Launcher
   url_launcher: ^6.3.0
 
+# Wearther Icons
+  weather_icons: ^3.0.0
+
   flutter_localizations:
     sdk: flutter
 
@@ -90,6 +99,7 @@ flutter:
   assets:
     - assets/img/
     - assets/icon/
+    - .env
 
   # fonts:
   #   - family: Schyler

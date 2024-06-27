@@ -91,7 +91,7 @@ class _AboutPageState extends State<AboutPage> {
                         Navigator.pop(context);
                         launchUrl(
                           Uri.parse(
-                            'https://raw.githubusercontent.com/hendrilmendes/Project-X/main/CHANGELOG.md',
+                            'https://raw.githubusercontent.com/hendrilmendes/Wally/main/CHANGELOG.md',
                           ),
                           mode: LaunchMode.inAppBrowserView,
                         );
@@ -130,7 +130,7 @@ class _AboutPageState extends State<AboutPage> {
                         Navigator.pop(context);
                         launchUrl(
                           Uri.parse(
-                            'https://github.com/hendrilmendes/Project-X/',
+                            'https://github.com/hendrilmendes/Wally/',
                           ),
                           mode: LaunchMode.inAppBrowserView,
                         );

@@ -12,7 +12,7 @@ class Updater {
     try {
       final response = await http.get(
         Uri.parse(
-            'https://api.github.com/repos/hendrilmendes/Project-X/releases/latest'),
+            'https://api.github.com/repos/hendrilmendes/Wally/releases/latest'),
         headers: {
           'Accept': 'application/vnd.github.v3+json',
         },
@@ -72,7 +72,7 @@ class Updater {
                       // iOS
                       launchUrl(
                         Uri.parse(
-                            'https://github.com/hendrilmendes/Project-X/releases/latest'),
+                            'https://github.com/hendrilmendes/Wally/releases/latest'),
                       );
                       Navigator.pop(context); // Fecha o diálogo interno
                     }

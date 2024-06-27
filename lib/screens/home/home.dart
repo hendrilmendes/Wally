@@ -1,7 +1,7 @@
 import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:projectx/api/api.dart';
 import 'package:projectx/screens/apps/apps.dart';
 import 'package:projectx/screens/settings/settings.dart';
 import 'package:projectx/screens/weather/weather.dart';
@@ -27,13 +27,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool _isListening = false;
   String _audioInput = '';
 
-  late final OpenAI openAI;
+  late OpenAI openAI;
 
   @override
   void initState() {
     super.initState();
     _controller.addListener(_updateButtonState);
+    _initializeOpenAI();
     _sendWelcomeMessage();
+  }
+
+  void _initializeOpenAI() async {
+    await dotenv.load();
+    final apiKey = dotenv.env['OPENAI_API_KEY'];
+    
+    if (apiKey == null) {
+      throw Exception("OPENAI_API_KEY não foi configurada no arquivo .env");
+    }
 
     openAI = OpenAI.instance.build(
       token: apiKey,
@@ -82,6 +92,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           _messages.add(chatMessage);
         });
       });
+    } else if (_shouldCheckWeather(messageContent)) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const WeatherScreen(),
+        ),
+      );
     } else {
       setState(() {
         _messages.add(ChatMessage(
@@ -128,10 +145,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
+  bool _shouldCheckWeather(String message) {
+    final lowerCaseMessage = message.toLowerCase();
+    return lowerCaseMessage.contains("tempo") ||
+        lowerCaseMessage.contains("previsão do tempo") ||
+        lowerCaseMessage.contains("clima");
+  }
+
   bool _shouldOpenApp(String message) {
     final lowerCaseMessage = message.toLowerCase();
     return lowerCaseMessage.contains("abra") ||
-        lowerCaseMessage.contains("abre");
+        lowerCaseMessage.contains("abre") ||
+        lowerCaseMessage.contains("abrir");
   }
 
   Future<void> _listen() async {

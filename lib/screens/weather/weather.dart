@@ -5,7 +5,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
-import 'package:projectx/api/api.dart';
+import 'package:weather_icons/weather_icons.dart';
 
 class WeatherScreen extends StatefulWidget {
   const WeatherScreen({super.key});
@@ -19,6 +19,7 @@ class _WeatherScreenState extends State<WeatherScreen>
     with SingleTickerProviderStateMixin {
   String _weatherData = '';
   String _cityName = '';
+  String _weatherDescription = '';
   bool _isLoading = true;
   late AnimationController _controller;
   late Animation<double> _animation;
@@ -135,7 +136,7 @@ class _WeatherScreenState extends State<WeatherScreen>
         setState(() {
           _cityName = cityName;
         });
-        _getLocationKey(latitude, longitude);
+        _getWeatherData(latitude, longitude);
       } else {
         setState(() {
           _weatherData = 'Error: ${response.statusCode}';
@@ -156,65 +157,23 @@ class _WeatherScreenState extends State<WeatherScreen>
     }
   }
 
-  Future<void> _getLocationKey(double latitude, double longitude) async {
+  Future<void> _getWeatherData(double latitude, double longitude) async {
     try {
       String apiUrl =
-          'https://dataservice.accuweather.com/locations/v1/cities/geoposition/search?apikey=$apiKeyWearth&q=$latitude,$longitude';
+          'https://api.open-meteo.com/v1/forecast?latitude=$latitude&longitude=$longitude&current_weather=true&timezone=auto';
 
       final response = await http.get(Uri.parse(apiUrl));
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
-        if (jsonData != null && jsonData['Key'] != null) {
-          String locationKey = jsonData['Key'];
-          _getWeatherData(locationKey);
-        } else {
+        if (jsonData != null && jsonData['current_weather'] != null) {
+          final weatherData = jsonData['current_weather'];
+          final temperature = (weatherData['temperature'] ?? 0).toInt();
+          final weatherCode = weatherData['weathercode'] ?? 0;
+          final weatherDescription = _getWeatherDescription(weatherCode);
           setState(() {
-            _weatherData = 'Error: No location key found';
-            _isLoading = false;
-          });
-          if (kDebugMode) {
-            print('Error: No location key found in the response');
-          }
-        }
-      } else {
-        setState(() {
-          _weatherData = 'Error: ${response.statusCode}';
-          _isLoading = false;
-        });
-        if (kDebugMode) {
-          print('Error getting location key: ${response.statusCode}');
-        }
-      }
-    } catch (e) {
-      setState(() {
-        _weatherData = 'Error: $e';
-        _isLoading = false;
-      });
-      if (kDebugMode) {
-        print('Error getting location key: $e');
-      }
-    }
-  }
-
-  Future<void> _getWeatherData(String locationKey) async {
-    try {
-      String apiUrl =
-          'https://dataservice.accuweather.com/currentconditions/v1/$locationKey?apikey=$apiKeyWearth';
-
-      final response = await http.get(Uri.parse(apiUrl));
-
-      if (response.statusCode == 200) {
-        final jsonData = jsonDecode(response.body);
-        if (jsonData != null && jsonData.isNotEmpty) {
-          final weatherData = jsonData[0];
-          setState(() {
-            _weatherData = '''
-${AppLocalizations.of(context)!.description}: ${weatherData['WeatherText'] ?? 'N/A'}
-${AppLocalizations.of(context)!.temperature}: ${weatherData['Temperature']['Metric']['Value'] ?? 'N/A'}°C
-${AppLocalizations.of(context)!.humidity}: ${weatherData['RelativeHumidity'] ?? 'N/A'}%
-${AppLocalizations.of(context)!.windSpeed}: ${weatherData['Wind']?['Speed']?['Metric']?['Value'] ?? 'N/A'} m/s
-            ''';
+            _weatherData = '$temperature°C';
+            _weatherDescription = weatherDescription;
             _isLoading = false;
           });
           _controller.forward();
@@ -226,14 +185,6 @@ ${AppLocalizations.of(context)!.windSpeed}: ${weatherData['Wind']?['Speed']?['Me
           if (kDebugMode) {
             print('Error: No weather data found in the response');
           }
-        }
-      } else if (response.statusCode == 404) {
-        setState(() {
-          _weatherData = 'Error: The requested resource was not found.';
-          _isLoading = false;
-        });
-        if (kDebugMode) {
-          print('Weather data not found for location key: $locationKey');
         }
       } else {
         setState(() {
@@ -263,50 +214,185 @@ ${AppLocalizations.of(context)!.windSpeed}: ${weatherData['Wind']?['Speed']?['Me
     }
   }
 
+  String _getWeatherDescription(int weatherCode) {
+    switch (weatherCode) {
+      case 0:
+        return 'Céu limpo';
+      case 1:
+      case 2:
+      case 3:
+        return 'Parcialmente nublado';
+      case 45:
+      case 48:
+        return 'Nevoeiro';
+      case 51:
+      case 53:
+      case 55:
+        return 'Chuvisco';
+      case 61:
+      case 63:
+      case 65:
+        return 'Chuva';
+      case 71:
+      case 73:
+      case 75:
+        return 'Neve';
+      case 95:
+        return 'Trovoada';
+      default:
+        return 'Desconhecido';
+    }
+  }
+
+  String _getPreventionRecommendation(String weatherDescription) {
+    if (weatherDescription.contains('Chuva') ||
+        weatherDescription.contains('Chuvisco')) {
+      return 'Está chovendo! Perfeito para assistir a um filme com pipoca ou fazer uma sopa quentinha. Não se esqueça do guarda-chuva!';
+    } else if (weatherDescription.contains('Céu limpo')) {
+      return 'O céu está limpo e o sol está brilhando! Use protetor solar e aproveite um sorvete ou um picnic no parque.';
+    } else if (weatherDescription.contains('Nublado') ||
+        weatherDescription.contains('Nevoeiro')) {
+      return 'Está nublado. Que tal um café quentinho e um bom livro? Fique de olho, o tempo pode mudar a qualquer momento.';
+    } else if (weatherDescription.contains('Neve')) {
+      return 'Neve! Hora de um chocolate quente e construir um boneco de neve. Não se esqueça do casaco!';
+    } else if (weatherDescription.contains('Trovoada')) {
+      return 'Trovoada à vista! Melhor ficar em casa e jogar um jogo de tabuleiro. Evite áreas abertas e árvores.';
+    } else {
+      return 'Talvez seja um bom momento para inventar uma nova receita na cozinha!';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.weather),
+        backgroundColor: _getGradientColor(_weatherDescription).colors.first,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            FadeTransition(
-              opacity: _animation,
-              child: const Icon(
-                Icons.cloud,
-                size: 48,
-                color: Colors.blue,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: _getGradientColor(_weatherDescription),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              FadeTransition(
+                opacity: _animation,
+                child: Icon(
+                  _getWeatherIcon(_weatherDescription),
+                  size: 100,
+                  color: Colors.white,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '${AppLocalizations.of(context)!.weatherTo} $_cityName',
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+              const SizedBox(height: 50),
+              Text(
+                '${AppLocalizations.of(context)!.weatherTo} $_cityName',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _weatherData,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 18,
+              Text(
+                _weatherData,
+                style: const TextStyle(
+                  fontSize: 48,
+                  color: Colors.white,
+                ),
               ),
-            ),
-            if (_isLoading)
-              const Padding(
-                padding: EdgeInsets.only(top: 16),
-                child: CircularProgressIndicator(),
+              Text(
+                _weatherDescription,
+                style: const TextStyle(
+                  fontSize: 24,
+                  color: Colors.white,
+                ),
               ),
-          ],
+              const SizedBox(height: 16),
+              if (!_isLoading)
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        _getPreventionRecommendation(_weatherDescription),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              if (_isLoading)
+                const Padding(
+                  padding: EdgeInsets.only(top: 16),
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  LinearGradient _getGradientColor(String weatherDescription) {
+    switch (weatherDescription) {
+      case 'Céu limpo':
+        return const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.blue, Colors.lightBlueAccent],
+        );
+      case 'Chuva':
+      case 'Chuvisco':
+        return const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.grey, Colors.blueGrey],
+        );
+      case 'Neve':
+        return const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.grey, Colors.white],
+        );
+      case 'Trovoada':
+        return const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.black87, Colors.grey],
+        );
+      default:
+        return const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.grey, Colors.white],
+        );
+    }
+  }
+}
+
+IconData _getWeatherIcon(String weatherDescription) {
+  if (weatherDescription.contains('Céu limpo')) {
+    return WeatherIcons.day_sunny;
+  } else if (weatherDescription.contains('Chuva') ||
+      weatherDescription.contains('Chuvisco')) {
+    return WeatherIcons.rain;
+  } else if (weatherDescription.contains('Nublado') ||
+      weatherDescription.contains('Nevoeiro')) {
+    return WeatherIcons.cloud;
+  } else if (weatherDescription.contains('Neve')) {
+    return WeatherIcons.snow;
+  } else if (weatherDescription.contains('Trovoada')) {
+    return WeatherIcons.thunderstorm;
+  } else {
+    return WeatherIcons.cloudy;
   }
 }

@@ -19,7 +19,8 @@ Um assistente virtual
 ##
 
 ### Recursos:
-* Integração ChatGPT
+* Integração com ChatGPT
+* Integração com Open-Meteo
 ##
 
 ### O que há de novo?
