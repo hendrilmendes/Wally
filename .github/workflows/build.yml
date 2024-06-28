@@ -27,6 +27,8 @@ jobs:
       run: flutter build web --release --dart-define=OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
 
     - name: Deploy to GitHub Pages
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
       run: |
         rm -rf docs
         mv build/web docs
