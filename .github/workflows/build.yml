@@ -22,9 +22,11 @@ jobs:
       run: flutter pub get
 
     - name: Build web
-      run: flutter build web --release --dart-define=OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+      run: flutter build web --release
 
     - name: Deploy to GitHub Pages
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
       run: |
         rm -rf docs
         mv build/web docs
@@ -32,4 +34,4 @@ jobs:
         git config --local user.name "GitHub Actions"
         git add docs
         git commit -m "Deploy to GitHub Pages"
-        git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/hendrilmendes/Wally.git HEAD:main
+        git push https://github.com/hendrilmendes/Wally.git HEAD:main
