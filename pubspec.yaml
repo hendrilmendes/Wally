@@ -2,7 +2,7 @@ name: projectx
 description: "Um assistente virtual"
 publish_to: 'none'
 
-version: 0.0.18-alpha+19
+version: 0.0.19-alpha+20
 
 environment:
   sdk: '>=3.4.3 <4.0.0'
