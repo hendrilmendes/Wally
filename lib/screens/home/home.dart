@@ -43,13 +43,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Future<void> _initializeOpenAI() async {
     String? apiKey;
 
-    if (kIsWeb) {
-      final env = js.context['env'];
-      apiKey = env['OPENAI_API_KEY'] as String?;
-    } else {
+
       await dotenv.load();
       apiKey = dotenv.env['OPENAI_API_KEY'];
-    }
+    
 
     if (apiKey == null) {
       throw Exception("OPENAI_API_KEY não foi configurada corretamente.");
