@@ -90,8 +90,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Future<void> _sendMessage(String messageContent,
       {bool fromAudio = false}) async {
+    await _openAIInitialized;
+
     if (openAI == null) {
-      await _openAIInitialized;
+      throw Exception("OpenAI não foi inicializado corretamente.");
     }
 
     setState(() {
@@ -138,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       try {
         final response = await openAI!.onChatCompletion(request: request);
         if (response != null && response.choices.isNotEmpty) {
-          final gptResponse = response.choices.first.message!.content;
+          final gptResponse = response.choices.first.message?.content ?? '';
           setState(() {
             _messages.removeLast();
             _messages.add(ChatMessage(

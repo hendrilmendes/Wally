@@ -10,8 +10,7 @@ class AppLauncher {
   static Future<void> handleAppRequest(
       String message, Function(ChatMessage) addMessage) async {
 
-
-    if (kIsWeb || !Platform.isIOS || !Platform.isWindows || !Platform.isLinux|| Platform.isMacOS) {
+    if (!Platform.isAndroid) {
       addMessage(ChatMessage(
         role: Role.chatGPT,
         content: "Esta funcionalidade está disponível apenas no Android.",
