@@ -44,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     String? apiKey;
 
     if (kIsWeb) {
-      final envJs = html.window.on as Map<String, dynamic>;
+      final Map<String, dynamic> envJs = html.window.localStorage;
       apiKey = envJs['OPENAI_API_KEY'] as String?;
       if (kDebugMode) {
         print('API Key from JS: $apiKey');
