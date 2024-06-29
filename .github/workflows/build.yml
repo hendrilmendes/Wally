@@ -27,11 +27,10 @@ jobs:
     - name: Deploy to GitHub Pages
       env:
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}  # Configura a variável de ambiente aqui
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       run: |
         rm -rf docs
         mv build/web docs
-        echo "window.env = { OPENAI_API_KEY: '${OPENAI_API_KEY}' };" > docs/env.js
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Actions"
         git add docs
