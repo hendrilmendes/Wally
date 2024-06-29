@@ -44,11 +44,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     String? apiKey;
 
     if (kIsWeb) {
-      final env = js.context['env'];
-      apiKey = env['OPENAI_API_KEY'] as String?;
+      final env = js.context['env']
+          as Map<String, dynamic>?;
+      apiKey = env?['OPENAI_API_KEY'] as String?;
+       if (kDebugMode) {
+         print('API Key from JS: $apiKey');
+       }
     } else {
       await dotenv.load();
       apiKey = dotenv.env['OPENAI_API_KEY'];
+       if (kDebugMode) {
+         print('API Key from .env: $apiKey');
+       }
     }
 
     if (apiKey == null) {
