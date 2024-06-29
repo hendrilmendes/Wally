@@ -1,4 +1,5 @@
 import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
+import 'dart:html' as html;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -42,10 +43,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Future<void> _initializeOpenAI() async {
     String? apiKey;
 
-    await dotenv.load();
-    apiKey = dotenv.env['OPENAI_API_KEY'];
-    if (kDebugMode) {
-      print('API Key from .env: $apiKey');
+    if (kIsWeb) {
+      final envJs = html.window.localStorage;
+      apiKey = envJs['OPENAI_API_KEY'];
+      if (kDebugMode) {
+        print('API Key from JS: $apiKey');
+      }
+    } else {
+      await dotenv.load();
+      apiKey = dotenv.env['OPENAI_API_KEY'];
+      if (kDebugMode) {
+        print('API Key from .env: $apiKey');
+      }
     }
 
     if (apiKey == null) {
