@@ -21,6 +21,7 @@ Um assistente virtual
 ### Recursos:
 * Integração com ChatGPT
 * Integração com Open-Meteo
+* Abrir apps populares como, Whatsapp, Instagram, Facebook, Spotify, etc
 ##
 
 ### O que há de novo?

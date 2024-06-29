@@ -11,5 +11,6 @@ Novo
 - O assistente agora e capaz de abrir alguns apps populares
 
 Correções/Melhorias
+- Correções de bugs
 - Correções internas
 
