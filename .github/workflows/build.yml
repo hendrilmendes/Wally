@@ -27,7 +27,8 @@ jobs:
     - name: Generate env.js
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      run: echo "window.env = { OPENAI_API_KEY: '${OPENAI_API_KEY}' };" > build/web/env.js
+      run: |
+        echo "window.env = { OPENAI_API_KEY: '${OPENAI_API_KEY}' };" > build/web/env.js
 
     - name: Deploy to GitHub Pages
       run: |
