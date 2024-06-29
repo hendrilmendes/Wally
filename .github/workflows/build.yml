@@ -21,12 +21,14 @@ jobs:
     - name: Install dependencies
       run: flutter pub get
 
+    - name: Create env.js with secrets
+      run: echo "window.env = { OPENAI_API_KEY: '${{ secrets.OPENAI_API_KEY }}' };" > build/web/env.js
+
     - name: Build web
       run: flutter build web --release
 
     - name: Deploy to GitHub Pages
       env:
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
       run: |
         rm -rf docs
