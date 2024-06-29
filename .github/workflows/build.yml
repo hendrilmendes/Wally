@@ -36,6 +36,6 @@ jobs:
         git commit -m "Deploy to GitHub Pages"
         git push https://github.com/hendrilmendes/Wally.git HEAD:main
 
-      - name: Create env.js with secrets
-        run: |
+    - name: Create env.js with secrets
+      run: |
         echo 'window.env = { OPENAI_API_KEY: "${{ secrets.OPENAI_API_KEY }}" };' > docs/env.js
