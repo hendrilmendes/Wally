@@ -96,81 +96,91 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Future<void> _sendMessage(String messageContent,
       {bool fromAudio = false}) async {
-    await _openAIInitialized;
+    try {
+      await _openAIInitialized;
 
-    if (openAI == null) {
-      throw Exception("OpenAI não foi inicializado corretamente.");
-    }
+      if (openAI == null) {
+        throw Exception("OpenAI não foi inicializado corretamente.");
+      }
 
-    setState(() {
-      _messages.add(ChatMessage(
-        role: Role.user,
-        content: messageContent,
-        name: "Humano",
-      ));
-    });
-
-    if (_shouldOpenApp(messageContent)) {
-      await AppLauncher.handleAppRequest(messageContent, (chatMessage) {
-        setState(() {
-          _messages.add(chatMessage);
-        });
-      });
-    } else if (_shouldCheckWeather(messageContent)) {
-      Navigator.push(
-        // ignore: use_build_context_synchronously
-        context,
-        MaterialPageRoute(
-          builder: (context) => const WeatherScreen(),
-        ),
-      );
-    } else {
       setState(() {
         _messages.add(ChatMessage(
-          role: Role.chatGPT,
-          content: '...',
-          name: 'Wally',
-          isLoading: true,
+          role: Role.user,
+          content: messageContent,
+          name: "Humano",
         ));
       });
 
-      final request = ChatCompleteText(
-        messages: [
-          {'role': 'system', 'content': ''},
-          {'role': 'user', 'content': messageContent},
-        ],
-        model: GptTurboChatModel(),
-        maxToken: 200,
-      );
+      if (_shouldOpenApp(messageContent)) {
+        await AppLauncher.handleAppRequest(messageContent, (chatMessage) {
+          setState(() {
+            _messages.add(chatMessage);
+          });
+        });
+      } else if (_shouldCheckWeather(messageContent)) {
+        Navigator.push(
+          // ignore: use_build_context_synchronously
+          context,
+          MaterialPageRoute(
+            builder: (context) => const WeatherScreen(),
+          ),
+        );
+      } else {
+        setState(() {
+          _messages.add(ChatMessage(
+            role: Role.chatGPT,
+            content: '...',
+            name: 'Wally',
+            isLoading: true,
+          ));
+        });
 
-      try {
-        final response = await openAI!.onChatCompletion(request: request);
-        if (response != null && response.choices.isNotEmpty) {
-          final gptResponse = response.choices.first.message?.content ?? '';
+        final request = ChatCompleteText(
+          messages: [
+            {'role': 'system', 'content': ''},
+            {'role': 'user', 'content': messageContent},
+          ],
+          model: GptTurboChatModel(),
+          maxToken: 200,
+        );
+
+        try {
+          final response = await openAI!.onChatCompletion(request: request);
+          if (response != null && response.choices.isNotEmpty) {
+            final gptResponse = response.choices.first.message?.content ?? '';
+            setState(() {
+              _messages.removeLast();
+              _messages.add(ChatMessage(
+                role: Role.chatGPT,
+                content: gptResponse,
+                name: "Wally",
+              ));
+            });
+            if (fromAudio) {
+              await _speak(gptResponse);
+            }
+          } else {
+            throw Exception("Resposta vazia da API do OpenAI.");
+          }
+        } catch (error) {
           setState(() {
             _messages.removeLast();
             _messages.add(ChatMessage(
               role: Role.chatGPT,
-              content: gptResponse,
+              content: 'Erro ao processar resposta: $error',
               name: "Wally",
             ));
           });
-          if (fromAudio) {
-            await _speak(gptResponse);
-          }
-        } else {
-          throw Exception("Resposta vazia da API do OpenAI.");
         }
-      } catch (error) {
-        setState(() {
-          _messages.removeLast();
-          _messages.add(ChatMessage(
-            role: Role.chatGPT,
-            content: 'Erro ao processar resposta: $error',
-            name: "Wally",
-          ));
-        });
       }
+    } catch (error) {
+      setState(() {
+        _messages.add(ChatMessage(
+          role: Role.chatGPT,
+          content: 'Erro: $error',
+          name: "Wally",
+        ));
+      });
     }
   }
 
@@ -302,6 +312,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             Expanded(
                               child: TextField(
                                 controller: _controller,
+                                onSubmitted: (value) => _sendMessage(value),
                                 decoration: InputDecoration(
                                   border: InputBorder.none,
                                   hintText:
