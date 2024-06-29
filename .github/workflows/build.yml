@@ -24,14 +24,16 @@ jobs:
     - name: Build web
       run: flutter build web --release
 
+    - name: Inject API key into index.html
+      run: |
+        sed -i 's/\${{ secrets.OPENAI_API_KEY }}/'"${{ secrets.OPENAI_API_KEY }}"'/g' build/web/index.html
+
     - name: Deploy to GitHub Pages
       env:
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       run: |
         rm -rf docs
         mv build/web docs
-        echo "window.env = { OPENAI_API_KEY: '${OPENAI_API_KEY}' };" > docs/env.js
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Actions"
         git add docs

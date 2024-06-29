@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
 import 'dart:html' as html;
 import 'package:flutter/foundation.dart';
@@ -46,10 +44,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     String? apiKey;
 
     if (kIsWeb) {
-      final envJs = await html.HttpRequest.getString('env.js');
-      final env = json.decode(envJs.replaceAll('window.env = ', ''))
-          as Map<String, dynamic>;
-      apiKey = env['OPENAI_API_KEY'] as String?;
+      final envJs = html.window.on as Map<String, dynamic>;
+      apiKey = envJs['OPENAI_API_KEY'] as String?;
       if (kDebugMode) {
         print('API Key from JS: $apiKey');
       }
