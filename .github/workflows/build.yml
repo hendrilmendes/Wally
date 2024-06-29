@@ -24,6 +24,10 @@ jobs:
     - name: Build web
       run: flutter build web --release
 
+    - name: Create env.js with secrets
+      run: |
+        echo 'window.env = { OPENAI_API_KEY: "${{ secrets.OPENAI_API_KEY }}" };' > build/web/env.js
+
     - name: Deploy to GitHub Pages
       env:
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -35,7 +39,3 @@ jobs:
         git add docs
         git commit -m "Deploy to GitHub Pages"
         git push https://github.com/hendrilmendes/Wally.git HEAD:main
-
-    - name: Create env.js with secrets
-      run: |
-        echo 'window.env = { OPENAI_API_KEY: "${{ secrets.OPENAI_API_KEY }}" };' > docs/env.js
