@@ -1,9 +1,9 @@
-import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
-import 'dart:html' as html;
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:http/http.dart' as http;
 import 'package:projectx/screens/apps/apps.dart';
 import 'package:projectx/screens/settings/settings.dart';
 import 'package:projectx/screens/weather/weather.dart';
@@ -19,7 +19,7 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _controller = TextEditingController();
   final List<ChatMessage> _messages = [];
   final String _userPhoto = 'assets/img/user_photo.png';
@@ -31,43 +31,63 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   OpenAI? openAI;
   late Future<void> _openAIInitialized;
+  String openaiApiKey = '';
 
   @override
   void initState() {
     super.initState();
     _controller.addListener(_updateButtonState);
-    _openAIInitialized = _initializeOpenAI();
+    _initOpenAI();
     _sendWelcomeMessage();
+    _fetchOpenAIKey();
+  }
+
+  Future<void> _initOpenAI() async {
+    await _fetchOpenAIKey();
+    await _initializeOpenAI();
+    setState(() {
+      _openAIInitialized = Future.value();
+    });
+  }
+
+  Future<void> _fetchOpenAIKey() async {
+    try {
+      final response = await http.get(Uri.parse('http://45.174.192.150:3000/api'));
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        setState(() {
+          openaiApiKey = jsonData['apiKey'];
+        });
+      } else {
+        throw Exception('Falha ao carregar OpenAI API key');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Erro ao obter OpenAI API key: $e');
+      }
+      throw Exception('Falha ao obter OpenAI API key');
+    }
   }
 
   Future<void> _initializeOpenAI() async {
-    String? apiKey;
-
-    if (kIsWeb) {
-      final envJs = html.window.localStorage;
-      apiKey = envJs['OPENAI_API_KEY'];
-      if (kDebugMode) {
-        print('API Key from JS: $apiKey');
+    try {
+      if (openaiApiKey.isEmpty) {
+        throw Exception('OpenAI API key nao obtida');
       }
-    } else {
-      await dotenv.load();
-      apiKey = dotenv.env['OPENAI_API_KEY'];
+
+      setState(() {
+        openAI = OpenAI.instance.build(
+          token: openaiApiKey,
+          baseOption: HttpSetup(receiveTimeout: const Duration(seconds: 6000)),
+          enableLog: true,
+        );
+      });
+    } catch (e) {
       if (kDebugMode) {
-        print('API Key from .env: $apiKey');
+        print('Erro ao inicializar OpenAI: $e');
       }
+      throw Exception('Falha ao inicializar OpenAI');
     }
-
-    if (apiKey == null) {
-      throw Exception("OPENAI_API_KEY não foi configurada corretamente.");
-    }
-
-    setState(() {
-      openAI = OpenAI.instance.build(
-        token: apiKey!,
-        baseOption: HttpSetup(receiveTimeout: const Duration(seconds: 6000)),
-        enableLog: true,
-      );
-    });
   }
 
   void _updateButtonState() {
@@ -231,138 +251,140 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: _openAIInitialized,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            return Scaffold(
-              appBar: AppBar(
-                title: Text(AppLocalizations.of(context)!.appName),
-              ),
-              drawer: Drawer(
-                child: ListView(
-                  padding: EdgeInsets.zero,
-                  children: <Widget>[
-                    DrawerHeader(
-                      child: Text(
-                        AppLocalizations.of(context)!.appName,
-                        style: const TextStyle(
-                          fontSize: 24,
-                        ),
+      future: _openAIInitialized,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(AppLocalizations.of(context)!.appName),
+            ),
+            drawer: Drawer(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: <Widget>[
+                  DrawerHeader(
+                    child: Text(
+                      AppLocalizations.of(context)!.appName,
+                      style: const TextStyle(
+                        fontSize: 24,
                       ),
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.wb_sunny_outlined),
-                      title: Text(AppLocalizations.of(context)!.weather),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const WeatherScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    const Divider(),
-                    ListTile(
-                      leading: const Icon(Icons.settings_outlined),
-                      title: Text(AppLocalizations.of(context)!.settings),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SettingsScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              body: Column(
-                children: [
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: _messages.length,
-                      itemBuilder: (context, index) {
-                        final message = _messages[index];
-                        return ChatBubble(
-                          role: message.role,
-                          content: message.content,
-                          name: message.name,
-                          photo: message.role == Role.user
-                              ? _userPhoto
-                              : _chatGptPhoto,
-                          isLoading: message.isLoading,
-                        );
-                      },
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8.0, vertical: 8.0),
-                    child: Card(
-                      color: Theme.of(context).cardColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24.0),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _controller,
-                                onSubmitted: (value) => _sendMessage(value),
-                                decoration: InputDecoration(
-                                  border: InputBorder.none,
-                                  hintText:
-                                      AppLocalizations.of(context)!.toType,
-                                ),
-                                onChanged: (text) {
-                                  setState(() {});
-                                },
-                                keyboardType: TextInputType.text,
-                                textInputAction: TextInputAction.search,
-                              ),
-                            ),
-                            AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 300),
-                              transitionBuilder:
-                                  (Widget child, Animation<double> animation) {
-                                return ScaleTransition(
-                                    scale: animation, child: child);
-                              },
-                              child: _controller.text.isEmpty
-                                  ? IconButton(
-                                      key: const ValueKey('mic'),
-                                      icon: const Icon(Icons.mic,
-                                          color: Colors.blue),
-                                      onPressed: _listen,
-                                    )
-                                  : IconButton(
-                                      key: const ValueKey('send'),
-                                      icon: const Icon(Icons.send,
-                                          color: Colors.blue),
-                                      onPressed: () async {
-                                        await _sendMessage(_controller.text);
-                                        _controller.clear();
-                                      },
-                                    ),
-                            ),
-                          ],
+                  ListTile(
+                    leading: const Icon(Icons.wb_sunny_outlined),
+                    title: Text(AppLocalizations.of(context)!.weather),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const WeatherScreen(),
                         ),
-                      ),
-                    ),
+                      );
+                    },
+                  ),
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(Icons.settings_outlined),
+                    title: Text(AppLocalizations.of(context)!.settings),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
-            );
-          } else {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-        });
+            ),
+            body: Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) {
+                      final message = _messages[index];
+                      return ChatBubble(
+                        role: message.role,
+                        content: message.content,
+                        name: message.name,
+                        photo: message.role == Role.user
+                            ? _userPhoto
+                            : _chatGptPhoto,
+                        isLoading: message.isLoading,
+                      );
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8.0, vertical: 8.0),
+                  child: Card(
+                    color: Theme.of(context).cardColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24.0),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _controller,
+                              onSubmitted: (value) => _sendMessage(value),
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                hintText: AppLocalizations.of(context)!.toType,
+                              ),
+                              onChanged: (text) {
+                                setState(() {});
+                              },
+                              keyboardType: TextInputType.text,
+                              textInputAction: TextInputAction.search,
+                            ),
+                          ),
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            transitionBuilder:
+                                (Widget child, Animation<double> animation) {
+                              return ScaleTransition(
+                                  scale: animation, child: child);
+                            },
+                            child: _controller.text.isEmpty
+                                ? IconButton(
+                                    key: const ValueKey('mic'),
+                                    icon: const Icon(Icons.mic,
+                                        color: Colors.blue),
+                                    onPressed: _listen,
+                                  )
+                                : IconButton(
+                                    key: const ValueKey('send'),
+                                    icon: const Icon(Icons.send,
+                                        color: Colors.blue),
+                                    onPressed: () async {
+                                      await _sendMessage(_controller.text);
+                                      _controller.clear();
+                                    },
+                                  ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        } else if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        } else {
+          return Text('Erro: ${snapshot.error}');
+        }
+      },
+    );
   }
 }
 
