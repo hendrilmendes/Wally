@@ -1,4 +1,4 @@
-## Project X
+## Wally
 Um assistente virtual
 
 ### Screenshots
@@ -7,7 +7,7 @@ Um assistente virtual
 
 ### Versão
 [![made-with-flutter](https://img.shields.io/badge/Made%20with-Flutter-1f425f.svg)](https://flutter.dev/)
-![Release](https://img.shields.io/github/v/release/hendrilmendes/Project-X)
+![Release](https://img.shields.io/github/v/release/hendrilmendes/Wally)
 ##
 
 ### Download

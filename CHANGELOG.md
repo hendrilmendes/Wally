@@ -1,4 +1,4 @@
-Changelog Project X
+Changelog Wally
 
 ======================================================
 
