@@ -48,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _fetchOpenAIKey() async {
     try {
-      final response = await http.get(Uri.https('wally-app.ddns.net:3000', '/api'));
+      final response = await http.get(Uri.https('wally-server.onrender.com', '/api'));
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         setState(() {
