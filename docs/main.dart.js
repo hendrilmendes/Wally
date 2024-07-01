@@ -100191,7 +100191,7 @@ yp(){var s=0,r=A.C(t.H),q=1,p,o=this,n,m,l,k,j
 var $async$yp=A.D(function(a,b){if(a===1){p=b
 s=q}while(true)switch(s){case 0:q=3
 s=6
-return A.K(A.a8k(A.b7h("http","wally-app.ddns.net:3000","/api",null),null),$async$yp)
+return A.K(A.a8k(A.b7h("https","wally-app.ddns.net:3000","/api",null),null),$async$yp)
 case 6:n=b
 if(n.b===200){l=n
 m=B.au.lX(0,A.a8h(J.aK(A.a84(l.e).c.a,"charset")).eF(0,l.w),null)
