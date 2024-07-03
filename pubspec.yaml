@@ -2,7 +2,7 @@ name: projectx
 description: "Um assistente virtual"
 publish_to: 'none'
 
-version: 0.0.26-alpha+27
+version: 0.0.27-alpha+28
 
 environment:
   sdk: '>=3.4.3 <4.0.0'
@@ -19,6 +19,9 @@ dependencies:
 
 # Device Apps
   device_apps: ^2.2.0
+
+# Device Plus
+  device_info_plus: ^10.1.0
 
 # Email
   flutter_email_sender: ^6.0.3
