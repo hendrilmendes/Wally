@@ -21,6 +21,12 @@ jobs:
     - name: Install dependencies
       run: flutter pub get
 
+    - name: CORS
+      run: dart pub global activate flutter_cors 
+
+    - name: CORS Disable
+      run: fluttercors --disable 
+
     - name: Build web
       run: flutter build web --release
 

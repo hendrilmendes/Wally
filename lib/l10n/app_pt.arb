@@ -26,7 +26,7 @@
     "update": "Atualizações",
     "updateSub": "Toque para buscar por novas versões do app",
     "support": "Suporte",
-    "supportSub": "Encontrou um bug ou deseja sugerir algo? Entre em contato conosco 😁",
+    "supportSub": "Encontrou um bug ou deseja sugerir algo?",
     "review": "Avalie o App",
     "reviewSub": "Faça uma avaliação na loja de apps",
     "aboutSub": "Um pouco mais sobre o app",
@@ -41,8 +41,10 @@
     "wallyWelcome": "Eu sou Wally, seu assistente virtual. Como posso ajudar você hoje?",
     "weather": "Clima",
     "weatherTo": "Tempo em",
-    "description": "Descrição",
-    "temperature": "Temperatura",
-    "humidity": "Umidade do Ar",
-    "windSpeed": "Velocidade dos Ventos"
+    "newsdroidApp": "News-Droid",
+    "tarefasApp": "Tarefas",
+    "incrementText": "Aumentar Texto",
+    "decrementText": "Diminuir Texto",
+    "shared": "Compartilhar",
+    "downloadApp": "Veja direto no app"
 }

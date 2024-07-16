@@ -5,11 +5,13 @@ import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:projectx/apps/apps.dart';
+import 'package:projectx/screens/newsdroid/news.dart';
 import 'package:projectx/screens/settings/settings.dart';
 import 'package:projectx/screens/weather/weather.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -48,7 +50,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _fetchOpenAIKey() async {
     try {
-      final response = await http.get(Uri.https('wally-server.onrender.com', '/api'));
+      final response =
+          await http.get(Uri.https('wally-server.onrender.com', '/api'));
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         setState(() {
@@ -143,6 +146,14 @@ class _HomeScreenState extends State<HomeScreen> {
             builder: (context) => const WeatherScreen(),
           ),
         );
+      } else if (_shouldCheckNews(messageContent)) {
+        Navigator.push(
+          // ignore: use_build_context_synchronously
+          context,
+          MaterialPageRoute(
+            builder: (context) => const NewsApp(),
+          ),
+        );
       } else {
         setState(() {
           _messages.add(ChatMessage(
@@ -216,6 +227,13 @@ class _HomeScreenState extends State<HomeScreen> {
         lowerCaseMessage.contains("abrir");
   }
 
+  bool _shouldCheckNews(String message) {
+    final lowerCaseMessage = message.toLowerCase();
+    return lowerCaseMessage.contains("notícias") ||
+        lowerCaseMessage.contains("noticia") ||
+        lowerCaseMessage.contains("news");
+  }
+
   Future<void> _listen() async {
     if (!_isListening) {
       bool available = await _speech.initialize(
@@ -285,6 +303,30 @@ class _HomeScreenState extends State<HomeScreen> {
                                       builder: (context) =>
                                           const WeatherScreen(),
                                     ),
+                                  );
+                                },
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.whatshot_outlined),
+                                title: Text(
+                                    AppLocalizations.of(context)!.newsdroidApp),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const NewsApp(),
+                                    ),
+                                  );
+                                },
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.task_alt_outlined),
+                                title: Text(
+                                    AppLocalizations.of(context)!.tarefasApp),
+                                onTap: () {
+                                  launchUrl(
+                                    Uri.parse(
+                                        'https://play.google.com/store/apps/details?id=com.github.hendrilmendes.tarefas'),
                                   );
                                 },
                               ),
@@ -434,6 +476,30 @@ class _HomeScreenState extends State<HomeScreen> {
                                 MaterialPageRoute(
                                   builder: (context) => const WeatherScreen(),
                                 ),
+                              );
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.whatshot_outlined),
+                            title: Text(
+                                AppLocalizations.of(context)!.newsdroidApp),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const NewsApp(),
+                                ),
+                              );
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.task_alt_outlined),
+                            title:
+                                Text(AppLocalizations.of(context)!.tarefasApp),
+                            onTap: () {
+                              launchUrl(
+                                Uri.parse(
+                                    'https://play.google.com/store/apps/details?id=com.github.hendrilmendes.tarefas'),
                               );
                             },
                           ),

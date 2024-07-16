@@ -86,7 +86,7 @@ class _AboutPageState extends State<AboutPage> {
                     child: ListTile(
                       title: Text(AppLocalizations.of(context)!.version),
                       subtitle: Text('v$appVersion Build: ($appBuild)'),
-                      leading: const Icon(Icons.task_alt_outlined),
+                      leading: const Icon(Icons.android),
                       onTap: () {
                         Navigator.pop(context);
                         launchUrl(
