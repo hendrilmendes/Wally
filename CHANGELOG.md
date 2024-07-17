@@ -9,6 +9,7 @@ Novo
 - Menu de ajustes
 - Integração com api de Clima
 - O assistente agora e capaz de abrir alguns apps populares
+- Integração de conteúdo News-Droid
 
 Correções/Melhorias
 - Correções de bugs
