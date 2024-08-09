@@ -46,5 +46,6 @@
     "incrementText": "Aumentar Texto",
     "decrementText": "Diminuir Texto",
     "shared": "Compartilhar",
-    "downloadApp": "Veja direto no app"
+    "downloadApp": "Veja direto no app",
+    "connectingServer": "Conectando ao servidor..."
 }

@@ -625,9 +625,19 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         } else {
-          return const Scaffold(
+          return Scaffold(
             body: Center(
-              child: CircularProgressIndicator(),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator.adaptive(),
+                  const SizedBox(height: 20),
+                  Text(
+                    AppLocalizations.of(context)!.connectingServer,
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                ],
+              ),
             ),
           );
         }

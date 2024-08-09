@@ -2,7 +2,7 @@ Changelog Wally
 
 ======================================================
 
-#### Em desenvolvimento
+#### 0.0.30-alpha
 Novo
 - Integração de API ChatGPT
 - Nova interface
