@@ -22,7 +22,7 @@
     "lightMode": "Modo Claro",
     "systemMode": "Padrão do Sistema",
     "dynamicColors": "Dynamic Colors",
-    "dynamicColorsSub": "O Dynamic Colors proporciona uma interface agradável de acordo com o seu papel de parede (Android 12+)",
+    "dynamicColorsSub": "O Dynamic Colors proporciona uma interface agradável de acordo com o seu papel de parede",
     "update": "Atualizações",
     "updateSub": "Toque para buscar por novas versões do app",
     "support": "Suporte",
@@ -48,4 +48,3 @@
     "shared": "Compartilhar",
     "downloadApp": "Veja direto no app",
     "connectingServer": "Conectando ao servidor..."
-}

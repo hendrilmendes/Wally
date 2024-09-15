@@ -93,6 +93,7 @@ class _WeatherScreenState extends State<WeatherScreen>
   Future<void> _getLocation() async {
     try {
       Position position = await Geolocator.getCurrentPosition(
+          // ignore: deprecated_member_use
           desiredAccuracy: LocationAccuracy.high);
       _getCityNameFromLocation(position.latitude, position.longitude);
     } catch (e) {

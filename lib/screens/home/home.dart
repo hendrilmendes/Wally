@@ -5,6 +5,8 @@ import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:projectx/apps/apps.dart';
+import 'package:projectx/chat/chat.dart';
+import 'package:projectx/chat/chat.dart' as chat;
 import 'package:projectx/screens/newsdroid/news.dart';
 import 'package:projectx/screens/settings/settings.dart';
 import 'package:projectx/screens/weather/weather.dart';
@@ -103,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _sendWelcomeMessage() async {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final welcomeMessage = ChatMessage(
-        role: Role.chatGPT,
+        role: chat.Role.chatGPT,
         content: AppLocalizations.of(context)!.wallyWelcome,
         name: 'Wally',
       );
@@ -124,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       setState(() {
         _messages.add(ChatMessage(
-          role: Role.user,
+          role: chat.Role.user,
           content: messageContent,
           name: "Humano",
         ));
@@ -157,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
       } else {
         setState(() {
           _messages.add(ChatMessage(
-            role: Role.chatGPT,
+            role: chat.Role.chatGPT,
             content: '...',
             name: 'Wally',
             isLoading: true,
@@ -169,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
             {'role': 'system', 'content': ''},
             {'role': 'user', 'content': messageContent},
           ],
-          model: GptTurboChatModel(),
+          model: Gpt4ChatModel(),
           maxToken: 200,
         );
 
@@ -180,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
             setState(() {
               _messages.removeLast();
               _messages.add(ChatMessage(
-                role: Role.chatGPT,
+                role: chat.Role.chatGPT,
                 content: gptResponse,
                 name: "Wally",
               ));
@@ -195,7 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() {
             _messages.removeLast();
             _messages.add(ChatMessage(
-              role: Role.chatGPT,
+              role: chat.Role.chatGPT,
               content: 'Erro ao processar resposta: $error',
               name: "Wally",
             ));
@@ -205,7 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (error) {
       setState(() {
         _messages.add(ChatMessage(
-          role: Role.chatGPT,
+          role: chat.Role.chatGPT,
           content: 'Erro: $error',
           name: "Wally",
         ));
@@ -364,7 +366,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   return ChatBubble(
                                     role: message.role,
                                     content: message.content,
-                                    photo: message.role == Role.user
+                                    photo: message.role == chat.Role.user
                                         ? _userPhoto
                                         : _chatGptPhoto,
                                     isLoading: message.isLoading,
@@ -529,7 +531,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               return ChatBubble(
                                 role: message.role,
                                 content: message.content,
-                                photo: message.role == Role.user
+                                photo: message.role == chat.Role.user
                                     ? _userPhoto
                                     : _chatGptPhoto,
                                 isLoading: message.isLoading,
@@ -642,94 +644,6 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
       },
-    );
-  }
-}
-
-class ChatMessage {
-  final Role role;
-  final String content;
-  final String name;
-  final bool isLoading;
-
-  ChatMessage({
-    required this.role,
-    required this.content,
-    required this.name,
-    this.isLoading = false,
-  });
-}
-
-enum Role { user, chatGPT }
-
-class ChatBubble extends StatelessWidget {
-  final Role role;
-  final String content;
-  final String photo;
-  final bool isLoading;
-
-  const ChatBubble({
-    super.key,
-    required this.role,
-    required this.content,
-    required this.photo,
-    this.isLoading = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final alignment =
-        role == Role.user ? CrossAxisAlignment.end : CrossAxisAlignment.start;
-    final bgColor = role == Role.user ? Colors.blue[100] : Colors.grey[300];
-    final textColor = role == Role.user ? Colors.black : Colors.black;
-    const avatarRadius = 20.0;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-      child: Column(
-        crossAxisAlignment: alignment,
-        children: [
-          Row(
-            mainAxisAlignment: role == Role.user
-                ? MainAxisAlignment.end
-                : MainAxisAlignment.start,
-            children: [
-              if (role == Role.chatGPT) ...[
-                CircleAvatar(
-                  radius: avatarRadius,
-                  backgroundImage: AssetImage(photo),
-                ),
-                const SizedBox(width: 8.0),
-              ],
-              Flexible(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: bgColor,
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                  padding: const EdgeInsets.all(12.0),
-                  child: isLoading
-                      ? const SpinKitThreeBounce(
-                          color: Colors.blue,
-                          size: 30.0,
-                        )
-                      : Text(
-                          content,
-                          style: TextStyle(color: textColor),
-                        ),
-                ),
-              ),
-              if (role == Role.user) ...[
-                const SizedBox(width: 8.0),
-                CircleAvatar(
-                  radius: avatarRadius,
-                  backgroundImage: AssetImage(photo),
-                ),
-              ],
-            ],
-          ),
-        ],
-      ),
     );
   }
 }

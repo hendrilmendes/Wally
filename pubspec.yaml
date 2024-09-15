@@ -2,7 +2,7 @@ name: projectx
 description: "Um assistente virtual"
 publish_to: 'none'
 
-version: 0.0.32-alpha+34
+version: 0.1.0+50
 
 environment:
   sdk: '>=3.5.0 <4.0.0'
@@ -15,7 +15,7 @@ dependencies:
   cached_network_image: ^3.4.0
 
 # Chat GPT
-  chat_gpt_sdk: ^3.0.9
+  chat_gpt_sdk: ^3.1.0
 
 # Dynamic Colors
   dynamic_color: ^1.7.0
@@ -37,7 +37,7 @@ dependencies:
         ref: master
 
 # Geo
-  geolocator: ^12.0.0
+  geolocator: ^13.0.1
 
 # HTML
   html: ^0.15.4
@@ -70,7 +70,7 @@ dependencies:
   shimmer: ^3.0.0
 
 # Speech to Text
-  speech_to_text: ^6.6.2
+  speech_to_text: ^7.0.0
 
 # SpinKit
   flutter_spinkit: ^5.2.1

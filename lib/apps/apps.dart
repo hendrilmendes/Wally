@@ -1,7 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/foundation.dart';
-import 'package:projectx/screens/home/home.dart';
+import 'package:projectx/chat/chat.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:device_apps/device_apps.dart';
 import 'dart:io' show Platform;
