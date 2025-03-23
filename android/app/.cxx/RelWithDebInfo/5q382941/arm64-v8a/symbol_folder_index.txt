@@ -1,0 +1,1 @@
+C:\Users\Hendril\Documents\GitHub\Wally\build\app\intermediates\cxx\RelWithDebInfo\5q382941\obj\arm64-v8a

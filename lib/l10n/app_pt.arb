@@ -92,12 +92,18 @@
     "@decrementText": {},
     "shared": "Compartilhar",
     "@shared": {},
-    "downloadApp": "Veja direto no app",
+    "downloadApp": "Veja no app",
     "@downloadApp": {},
     "connectingServer": "Conectando ao servidor...",
     "@connectingServer": {},
     "error": "Erro",
     "@error": {},
     "errorUpdate": "Não foi possível verificar atualizações.",
-    "@errorUpdate": {}
+    "@errorUpdate": {},
+    "homeLogin": "Bem vindo ao nosso app, aproveite 😁",
+    "@homeLogin": {},
+    "googleLogin": "Login com Google",
+    "@googleLogin": {},
+    "desconect": "Desconectar",
+    "@desconect": {}
 }

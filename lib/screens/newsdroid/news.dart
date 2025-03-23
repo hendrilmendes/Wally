@@ -1,10 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:projectx/l10n/app_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:projectx/widgets/loading/shimmer_news.dart';
 import 'package:projectx/widgets/newsdroid/post_list.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -64,8 +63,9 @@ class _NewsAppState extends State<NewsApp> {
     final cachedData = prefs.getString('cachedPosts');
     if (cachedData != null) {
       final Map<String, dynamic> cachedPosts = jsonDecode(cachedData);
-      final DateTime lastCachedTime =
-          DateTime.parse(prefs.getString('cachedTime') ?? '');
+      final DateTime lastCachedTime = DateTime.parse(
+        prefs.getString('cachedTime') ?? '',
+      );
       final DateTime currentTime = DateTime.now();
       final difference = currentTime.difference(lastCachedTime).inMinutes;
       if (difference < 5) {
@@ -81,16 +81,14 @@ class _NewsAppState extends State<NewsApp> {
     try {
       final response = await http.get(
         Uri.parse(
-            'https://www.googleapis.com/blogger/v3/blogs/3386768038934102311/posts?key=AIzaSyDnllJ2_CVl0wqYH-ZhgYnWw1BT42g5wZk&maxResults=100'),
+          'https://www.googleapis.com/blogger/v3/blogs/3386768038934102311/posts?key=AIzaSyDnllJ2_CVl0wqYH-ZhgYnWw1BT42g5wZk&maxResults=100',
+        ),
       );
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
         prefs.setString('cachedPosts', response.body);
-        prefs.setString(
-          'cachedTime',
-          DateTime.now().toString(),
-        );
+        prefs.setString('cachedTime', DateTime.now().toString());
         setState(() {
           posts = data['items'];
           filteredPosts = posts;
@@ -129,29 +127,29 @@ class _NewsAppState extends State<NewsApp> {
             onPressed: () {
               launchUrl(
                 Uri.parse(
-                    'https://play.google.com/store/apps/details?id=com.github.hendrilmendes.news'),
+                  'https://play.google.com/store/apps/details?id=com.github.hendrilmendes.news',
+                ),
               );
             },
-            child: Text(
-              (AppLocalizations.of(context)!.downloadApp),
-            ),
+            child: Text((AppLocalizations.of(context)!.downloadApp)),
           ),
         ],
       ),
-      body: isLoading
-          ? buildShimmerLoadingNews()
-          : PostListWidget(
-              filteredPosts: filteredPosts,
-              currentPage: _currentPage,
-              pageController: _pageController,
-              onPageChanged: (int page) {
-                setState(() {
-                  _currentPage = page;
-                });
-              },
-              onRefresh: _refreshPosts,
-              formatDate: formatDate,
-            ),
+      body:
+          isLoading
+              ? Center(child: CircularProgressIndicator.adaptive())
+              : PostListWidget(
+                filteredPosts: filteredPosts,
+                currentPage: _currentPage,
+                pageController: _pageController,
+                onPageChanged: (int page) {
+                  setState(() {
+                    _currentPage = page;
+                  });
+                },
+                onRefresh: _refreshPosts,
+                formatDate: formatDate,
+              ),
     );
   }
 }

@@ -3,7 +3,10 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  connectivity_plus
   dynamic_color
+  firebase_auth
+  firebase_core
   flutter_tts
   geolocator_windows
   share_plus

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1092048577683",
+    "project_id": "wally-95c84",
+    "storage_bucket": "wally-95c84.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1092048577683:android:3a02a99b31b56c2c195966",
+        "android_client_info": {
+          "package_name": "com.github.hendrilmendes.projectx"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBa_FQMMP0gnbuC9ZDvGlpdZEo2JPR3qa0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

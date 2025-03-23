@@ -147,7 +147,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get shared => 'Compartilhar';
 
   @override
-  String get downloadApp => 'Veja direto no app';
+  String get downloadApp => 'Veja no app';
 
   @override
   String get connectingServer => 'Conectando ao servidor...';
@@ -157,4 +157,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get errorUpdate => 'Não foi possível verificar atualizações.';
+
+  @override
+  String get homeLogin => 'Bem vindo ao nosso app, aproveite 😁';
+
+  @override
+  String get googleLogin => 'Login com Google';
+
+  @override
+  String get desconect => 'Desconectar';
 }

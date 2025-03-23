@@ -1,0 +1,2 @@
+C:/Users/Hendril/Documents/GitHub/Wally/android/app/.cxx/RelWithDebInfo/5q382941/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/Hendril/Documents/GitHub/Wally/android/app/.cxx/RelWithDebInfo/5q382941/x86_64/CMakeFiles/rebuild_cache.dir

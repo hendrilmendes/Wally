@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:projectx/l10n/app_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -40,10 +40,9 @@ class Updater {
   static Future<Map<String, dynamic>?> _fetchLatestReleaseInfo() async {
     final response = await http.get(
       Uri.parse(
-          'https://api.github.com/repos/hendrilmendes/Wally/releases/latest'),
-      headers: {
-        'Accept': 'application/vnd.github.v3+json',
-      },
+        'https://api.github.com/repos/hendrilmendes/Wally/releases/latest',
+      ),
+      headers: {'Accept': 'application/vnd.github.v3+json'},
     );
     if (response.statusCode == 200) {
       return json.decode(response.body);
@@ -64,7 +63,9 @@ class Updater {
 
   // Modal para nova atualização disponível
   static void _showUpdateAvailableModal(
-      BuildContext context, String releaseNotes) {
+    BuildContext context,
+    String releaseNotes,
+  ) {
     final AppLocalizations? localizations = AppLocalizations.of(context);
     final String titleText = localizations?.newUpdate ?? '';
 
@@ -81,25 +82,18 @@ class Updater {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                titleText,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              Text(titleText, style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
               Text(
                 localizations?.news ?? '',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               ConstrainedBox(
                 constraints: BoxConstraints(
                   maxHeight: MediaQuery.of(context).size.height * 0.6,
                 ),
-                child: SingleChildScrollView(
-                  child: Text(releaseNotes),
-                ),
+                child: SingleChildScrollView(child: Text(releaseNotes)),
               ),
               const SizedBox(height: 16),
               Row(
@@ -112,11 +106,14 @@ class Updater {
                   const SizedBox(width: 8),
                   FilledButton(
                     onPressed: () {
-                      final Uri uri = Platform.isAndroid
-                          ? Uri.parse(
-                              'https://play.google.com/store/apps/details?id=com.github.hendrilmendes.projectx')
-                          : Uri.parse(
-                              'https://github.com/hendrilmendes/Wally/releases/latest');
+                      final Uri uri =
+                          Platform.isAndroid
+                              ? Uri.parse(
+                                'https://play.google.com/store/apps/details?id=com.github.hendrilmendes.projectx',
+                              )
+                              : Uri.parse(
+                                'https://github.com/hendrilmendes/Wally/releases/latest',
+                              );
 
                       launchUrl(uri);
                       Navigator.pop(context); // Fecha o modal

@@ -1,8 +1,10 @@
 import 'dart:io' show Platform;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:projectx/l10n/app_localizations.dart';
 import 'package:projectx/theme/theme.dart';
 import 'package:projectx/widgets/settings/about.dart';
+import 'package:projectx/widgets/settings/accounts.dart';
 import 'package:projectx/widgets/settings/dynamic_colors.dart';
 import 'package:projectx/widgets/settings/review.dart';
 import 'package:projectx/widgets/settings/support.dart';
@@ -20,6 +22,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+   final User? _user = FirebaseAuth.instance.currentUser;
   bool _isAndroid12 = false;
 
   @override
@@ -53,6 +56,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       body: ListView(
         children: [
+          AccountUser(user: _user),
           const SizedBox(height: 8),
           _buildSectionCard(
             context,
@@ -71,30 +75,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 buildUpdateSettings(context),
                 buildReviewSettings(context),
                 buildSupportSettings(context),
-                buildAboutSettings(context),
               ],
             ),
+          ),
+          const SizedBox(height: 8),
+          _buildSectionCard(
+            context,
+            Column(children: [buildAboutSettings(context)]),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSectionCard(
-    BuildContext context,
-    Widget child,
-  ) {
+  Widget _buildSectionCard(BuildContext context, Widget child) {
     return Card(
       clipBehavior: Clip.hardEdge,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       color: Theme.of(context).listTileTheme.tileColor,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          child,
-        ],
+        children: [child],
       ),
     );
   }

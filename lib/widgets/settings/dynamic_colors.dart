@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:projectx/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:projectx/theme/theme.dart';
 
@@ -18,9 +18,7 @@ class _DynamicColorsSettingsState extends State<DynamicColorsSettings> {
 
     return ListTile(
       title: Text(AppLocalizations.of(context)!.dynamicColors),
-      subtitle: Text(
-        AppLocalizations.of(context)!.dynamicColorsSub,
-      ),
+      subtitle: Text(AppLocalizations.of(context)!.dynamicColorsSub),
       trailing: Switch(
         activeColor: Colors.blue,
         value: themeModel.isDynamicColorsEnabled,

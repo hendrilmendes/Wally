@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:projectx/l10n/app_localizations.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:shimmer/shimmer.dart';
@@ -64,8 +64,10 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
                 fit: StackFit.expand,
                 children: [
                   FutureBuilder(
-                    future:
-                        precacheImage(NetworkImage(widget.imageUrl), context),
+                    future: precacheImage(
+                      NetworkImage(widget.imageUrl),
+                      context,
+                    ),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.done) {
                         return ClipRRect(
@@ -87,9 +89,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
                               bottomLeft: Radius.circular(40),
                               bottomRight: Radius.circular(40),
                             ),
-                            child: Container(
-                              color: Colors.white,
-                            ),
+                            child: Container(color: Colors.white),
                           ),
                         );
                       }
@@ -135,32 +135,30 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
           SliverPadding(
             padding: const EdgeInsets.all(16.0),
             sliver: SliverList(
-              delegate: SliverChildListDelegate(
-                [
-                  Row(
-                    children: [
-                      const Icon(Icons.calendar_month_outlined,
-                          size: 12, color: Colors.grey),
-                      const SizedBox(width: 4),
-                      Text(
-                        widget.formattedDate,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const Divider(),
-                  const SizedBox(height: 16),
-                  HtmlWidget(
-                    widget.content,
-                    textStyle: TextStyle(fontSize: _fontSize),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ),
+              delegate: SliverChildListDelegate([
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.calendar_month_outlined,
+                      size: 12,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      widget.formattedDate,
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 16),
+                HtmlWidget(
+                  widget.content,
+                  textStyle: TextStyle(fontSize: _fontSize),
+                ),
+                const SizedBox(height: 16),
+              ]),
             ),
           ),
         ],

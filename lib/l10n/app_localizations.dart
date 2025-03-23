@@ -372,7 +372,7 @@ abstract class AppLocalizations {
   /// No description provided for @downloadApp.
   ///
   /// In pt, this message translates to:
-  /// **'Veja direto no app'**
+  /// **'Veja no app'**
   String get downloadApp;
 
   /// No description provided for @connectingServer.
@@ -392,6 +392,24 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Não foi possível verificar atualizações.'**
   String get errorUpdate;
+
+  /// No description provided for @homeLogin.
+  ///
+  /// In pt, this message translates to:
+  /// **'Bem vindo ao nosso app, aproveite 😁'**
+  String get homeLogin;
+
+  /// No description provided for @googleLogin.
+  ///
+  /// In pt, this message translates to:
+  /// **'Login com Google'**
+  String get googleLogin;
+
+  /// No description provided for @desconect.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desconectar'**
+  String get desconect;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
