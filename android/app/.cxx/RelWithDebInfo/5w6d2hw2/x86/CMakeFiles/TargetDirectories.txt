@@ -1,0 +1,2 @@
+/home/hendril/Documentos/GitHub/Wally/android/app/.cxx/RelWithDebInfo/5w6d2hw2/x86/CMakeFiles/edit_cache.dir
+/home/hendril/Documentos/GitHub/Wally/android/app/.cxx/RelWithDebInfo/5w6d2hw2/x86/CMakeFiles/rebuild_cache.dir

@@ -1,0 +1,1 @@
+/home/hendril/Documentos/GitHub/Wally/build/app/intermediates/cxx/RelWithDebInfo/5w6d2hw2/obj/arm64-v8a

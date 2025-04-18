@@ -53,7 +53,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _fetchDeepSeekKey() async {
     try {
       final response = await http.get(
-        Uri.https('wally-server.onrender.com', '/api'),
+        Uri.https('wally-server.hendrilmendes2015.workers.dev', '/api'),
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
+        },
       );
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
