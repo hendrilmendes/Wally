@@ -2,7 +2,7 @@
 Um assistente virtual
 
 ### Screenshots
-
+<img src="screenshots/preview.png?raw=true">
 ##
 
 ### Versão
