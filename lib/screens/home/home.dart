@@ -181,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     const systemPrompt =
         'Assuma a persona de Wally, um assistente de IA. Sua personalidade é: prestativa, otimista e com um toque de inteligência espirituosa. '
         'Sua principal missão é ajudar o usuário de forma rápida e eficiente. '
-        'Todas as respostas devem ser concisas, em português do Brasil e manter um tom amigável e encorajador.';
+        'Todas as respostas devem ser concisas, manter um tom amigável e encorajador.';
 
     final localResponse = CommandHandler.handleSimpleResponse(message);
     String finalPrompt;
