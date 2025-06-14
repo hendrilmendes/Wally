@@ -52,7 +52,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     user = FirebaseAuth.instance.currentUser;
     _iaInitialized = _initializeServices();
     _sendWelcomeMessage();
-
+    _controller.addListener(() {
+      if (mounted) {
+        setState(() {});
+      }
+    });
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -95,6 +99,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _flutterTts.stop();
     _controller.dispose();
     _pulseController.dispose();
+    _controller.removeListener(() {});
     super.dispose();
   }
 
@@ -129,30 +134,42 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     bool fromAudio = false,
     String? detectedLocale,
   }) async {
+    if (messageContent.trim().isEmpty) return;
+
+    final contentToSend = messageContent.trim();
+    _controller.clear();
+
+    _addMessage(
+      chat.ChatMessage(
+        role: chat.Role.user,
+        content: contentToSend,
+        name: "User",
+      ),
+    );
+
+    _addMessage(
+      chat.ChatMessage(
+        role: chat.Role.iA,
+        content: '...',
+        name: 'Wally',
+        isLoading: true,
+      ),
+    );
+
+    await Future.delayed(const Duration(milliseconds: 50));
+
     try {
       await _iaInitialized;
-      _addMessage(
-        chat.ChatMessage(
-          role: chat.Role.user,
-          content: messageContent,
-          name: "User",
-        ),
-      );
-      _controller.clear();
-      _addMessage(
-        chat.ChatMessage(
-          role: chat.Role.iA,
-          content: '...',
-          name: 'Wally',
-          isLoading: true,
-        ),
-      );
 
-      if (CommandHandler.shouldCheckWeather(messageContent)) {
-      } else if (CommandHandler.shouldCheckNews(messageContent)) {
+      if (CommandHandler.shouldCheckWeather(contentToSend)) {
+        _navigateToWeather();
+        _removeLoadingIndicator();
+      } else if (CommandHandler.shouldCheckNews(contentToSend)) {
+        _navigateToNews();
+        _removeLoadingIndicator();
       } else {
         await _generateAndDisplayResponse(
-          messageContent,
+          contentToSend,
           fromAudio: fromAudio,
           locale: detectedLocale ?? 'pt-BR',
         );
