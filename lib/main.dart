@@ -14,16 +14,18 @@ import 'package:projectx/screens/login/login.dart';
 import 'package:projectx/theme/theme.dart';
 import 'package:projectx/updater/updater.dart';
 import 'package:provider/provider.dart';
+import 'package:shorebird_code_push/shorebird_code_push.dart';
 
-main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Shorebird
+  await ShorebirdUpdater().checkForUpdate();
+
   // Inicialização do Firebase e Crashlytics
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-  
+
   runApp(
     BetterFeedback(
       theme: FeedbackThemeData.light(),
@@ -34,8 +36,7 @@ main() async {
         GlobalWidgetsLocalizations.delegate,
         GlobalFeedbackLocalizationsDelegate(),
       ],
-      localeOverride: const Locale('pt'),
-      child: const MyApp(),
+      child: MyApp(),
     ),
   );
 }
@@ -51,17 +52,24 @@ ThemeMode _getThemeMode(ThemeModeType mode) {
   }
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final AuthService authService = AuthService();
+  // ignore: library_private_types_in_public_api
+  _MyAppState createState() => _MyAppState();
+}
 
-    return ChangeNotifierProvider(
-      create: (_) => ThemeModel(),
+class _MyAppState extends State<MyApp> {
+  final AuthService authService = AuthService();
+  bool _updateChecked = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [ChangeNotifierProvider(create: (_) => ThemeModel())],
       child: Consumer<ThemeModel>(
-        builder: (_, themeModel, __) {
+        builder: (_, themeModel, _) {
           return DynamicColorBuilder(
             builder: (lightColorScheme, darkColorScheme) {
               if (!themeModel.isDynamicColorsEnabled) {
@@ -73,44 +81,32 @@ class MyApp extends StatelessWidget {
                 theme: ThemeData(
                   brightness: Brightness.light,
                   colorScheme: lightColorScheme?.copyWith(
-                    primary:
-                        themeModel.isDarkMode ? Colors.black : Colors.black,
+                    primary: themeModel.isDarkMode
+                        ? Colors.black
+                        : Colors.black,
                   ),
                   useMaterial3: true,
-                  textTheme: Typography()
-                      .black
-                      .apply(fontFamily: GoogleFonts.openSans().fontFamily),
-                  pageTransitionsTheme: PageTransitionsTheme(
-                    builders: Map<TargetPlatform,
-                        PageTransitionsBuilder>.fromIterable(
-                      TargetPlatform.values,
-                      value: (_) => const FadeForwardsPageTransitionsBuilder(),
-                    ),
+                  textTheme: Typography().black.apply(
+                    fontFamily: GoogleFonts.openSans().fontFamily,
                   ),
                 ),
                 darkTheme: ThemeData(
                   brightness: Brightness.dark,
                   colorScheme: darkColorScheme?.copyWith(
-                    primary:
-                        themeModel.isDarkMode ? Colors.white : Colors.black,
+                    primary: themeModel.isDarkMode
+                        ? Colors.white
+                        : Colors.black,
                   ),
                   useMaterial3: true,
-                  textTheme: Typography()
-                      .white
-                      .apply(fontFamily: GoogleFonts.openSans().fontFamily),
-                  pageTransitionsTheme: PageTransitionsTheme(
-                    builders: Map<TargetPlatform,
-                        PageTransitionsBuilder>.fromIterable(
-                      TargetPlatform.values,
-                      value: (_) => const FadeForwardsPageTransitionsBuilder(),
-                    ),
+                  textTheme: Typography().white.apply(
+                    fontFamily: GoogleFonts.openSans().fontFamily,
                   ),
                 ),
                 themeMode: _getThemeMode(themeModel.themeMode),
                 debugShowCheckedModeBanner: false,
                 localizationsDelegates: AppLocalizations.localizationsDelegates,
                 supportedLocales: AppLocalizations.supportedLocales,
-                home: _buildHome(authService),
+                home: _buildHome(context),
                 routes: {
                   '/login': (context) => LoginScreen(authService: authService),
                 },
@@ -122,12 +118,16 @@ class MyApp extends StatelessWidget {
     );
   }
 
-  Widget _buildHome(AuthService authService) {
+  Widget _buildHome(BuildContext context) {
     return FutureBuilder<User?>(
       future: authService.currentUser(),
       builder: (context, snapshot) {
-        Updater.checkUpdateApp(context);
         if (snapshot.connectionState == ConnectionState.done) {
+          if (!_updateChecked) {
+            _updateChecked = true;
+            Updater.checkUpdateApp(context);
+          }
+
           if (snapshot.hasData) {
             return const HomeScreen();
           } else {
@@ -135,9 +135,7 @@ class MyApp extends StatelessWidget {
           }
         } else {
           return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator.adaptive(),
-            ),
+            body: Center(child: CircularProgressIndicator.adaptive()),
           );
         }
       },

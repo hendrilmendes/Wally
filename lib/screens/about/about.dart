@@ -1,243 +1,337 @@
-import 'dart:convert';
+// ignore_for_file: deprecated_member_use
+
+import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:projectx/l10n/app_localizations.dart';
-import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class AboutPage extends StatefulWidget {
   const AboutPage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _AboutPageState createState() => _AboutPageState();
+  State<AboutPage> createState() => _AboutPageState();
 }
 
 class _AboutPageState extends State<AboutPage> {
-  String appVersion = '';
-  String appBuild = '';
-  String releaseNotes = '';
-  bool isLoading = true;
+  final List<Widget> _conversation = [];
+  final ScrollController _scrollController = ScrollController();
+  List<Map<String, dynamic>> _remainingQuestions = [];
+  String _appVersion = '';
 
   @override
   void initState() {
     super.initState();
-    PackageInfo.fromPlatform().then((packageInfo) {
-      setState(() {
-        appVersion = packageInfo.version;
-        appBuild = packageInfo.buildNumber;
-      });
-
-      // Buscar as informações de release do GitHub após obter a versão
-      _fetchReleaseInfo();
-    });
+    _loadPackageInfo();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _startConversation());
   }
 
-  // Função para buscar as informações de release do GitHub
-  Future<void> _fetchReleaseInfo() async {
-    try {
-      final response = await http.get(
-        Uri.parse('https://api.github.com/repos/hendrilmendes/Wally/releases'),
-      );
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
-      if (response.statusCode == 200) {
-        final List<dynamic> releases = jsonDecode(response.body);
-
-        String versionRelease = '';
-
-        for (var release in releases) {
-          if (release['tag_name'] == appVersion) {
-            versionRelease = release['body'];
-            break;
-          }
-        }
-
-        setState(() {
-          releaseNotes =
-              versionRelease.isNotEmpty
-                  ? versionRelease
-                  : 'Release para esta versão não encontrada. Verifique se há uma versão correspondente no GitHub.';
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          releaseNotes =
-              'Erro ao carregar as releases. Código: ${response.statusCode}';
-          isLoading = false;
-        });
-      }
-    } catch (e) {
+  Future<void> _loadPackageInfo() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    if (mounted) {
       setState(() {
-        releaseNotes =
-            'Erro ao carregar as releases. Verifique a conexão com a internet ou o formato das releases no GitHub.';
-        isLoading = false;
+        _appVersion = packageInfo.version;
       });
     }
   }
 
-  // Função para exibir as informações de release no Dialog
-  void _showReleaseInfo(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('${AppLocalizations.of(context)!.version} - v$appVersion'),
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-              ),
-            ],
-          ),
-          content:
-              isLoading
-                  ? Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [CircularProgressIndicator.adaptive()],
-                  )
-                  : SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          releaseNotes,
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ],
-                    ),
-                  ),
+  void _addMessage(Widget message) {
+    setState(() {
+      _conversation.add(message);
+    });
+    // Anima o scroll para o final da lista
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
         );
-      },
-    );
+      }
+    });
+  }
+
+  void _startConversation() {
+    final l10n = AppLocalizations.of(context)!;
+    _remainingQuestions = [
+      {'id': 'creator', 'text': l10n.whoCreatedYou},
+      {'id': 'version', 'text': l10n.whatIsYourVersion},
+      {'id': 'privacy', 'text': l10n.privacy},
+      {'id': 'source', 'text': l10n.sourceCode},
+      {'id': 'licenses', 'text': l10n.openSource},
+    ];
+
+    _addMessage(_buildBotBubble(l10n.wallyWelcomeAbout));
+    _addMessage(_buildQuestionChips());
+  }
+
+  void _handleQuestion(String id, String questionText) {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() {
+      _conversation.removeLast(); // Remove os chips
+    });
+    _addMessage(_buildUserBubble(questionText));
+    _remainingQuestions.removeWhere((q) => q['id'] == id);
+
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _addMessage(_buildBotBubble('...', isLoading: true));
+      Future.delayed(const Duration(seconds: 1), () {
+        String botResponse = '';
+        VoidCallback? action;
+        String? actionLabel;
+
+        switch (id) {
+          case 'creator':
+            botResponse = l10n.creatorResponse;
+            action = () =>
+                launchUrl(Uri.parse('https://github.com/hendrilmendes'));
+            actionLabel = l10n.seeGitHub;
+            break;
+          case 'version':
+           botResponse = l10n.versionResponse(_appVersion);
+            action = () => launchUrl(
+              Uri.parse(
+                'https://github.com/hendrilmendes/Wally/releases/tag/$_appVersion',
+              ),
+            );
+            actionLabel = l10n.seeChangelog;
+            break;
+          case 'source':
+            botResponse = l10n.sourceCodeSub;
+            action = () =>
+                launchUrl(Uri.parse('https://github.com/hendrilmendes/Wally'));
+            actionLabel = l10n.openRepository;
+            break;
+          case 'licenses':
+            botResponse = l10n.openSourceSub;
+            action = () => showLicensePage(
+              context: context,
+              applicationName: l10n.appName,
+            );
+            actionLabel = l10n.seeLicenses;
+            break;
+          case 'privacy':
+            botResponse = l10n.privacyPolicyResponse;
+            action = () => launchUrl(
+              Uri.parse(
+                'https://br-newsdroid.blogspot.com/p/politica-de-privacidade-wally.html',
+              ),
+            );
+            actionLabel = l10n.seePolicy;
+            break;
+        }
+
+        setState(() {
+          _conversation.removeLast();
+        });
+        _addMessage(
+          _buildBotBubble(
+            botResponse,
+            action: action,
+            actionLabel: actionLabel,
+          ),
+        );
+        if (_remainingQuestions.isNotEmpty) {
+          _addMessage(_buildQuestionChips());
+        } else {
+          _addMessage(_buildBotBubble(l10n.hopeIHelped));
+        }
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    int currentYear = DateTime.now().year;
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context)!.about)),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              children: [
-                const SizedBox(height: 20),
-                const Card(
-                  elevation: 15,
-                  shape: CircleBorder(),
-                  clipBehavior: Clip.antiAlias,
-                  child: SizedBox(
-                    width: 80,
-                    child: Image(
-                      image: AssetImage('assets/img/robot_photo.png'),
+      // Permite que o body fique atrás da AppBar
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        title: Text(l10n.about),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+      ),
+      body: Container(
+        // Fundo em gradiente para dar base ao efeito de vidro
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              theme.colorScheme.surface,
+              theme.colorScheme.primary.withOpacity(0.1),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  itemCount: _conversation.length,
+                  itemBuilder: (context, index) => _conversation[index],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBotBubble(
+    String text, {
+    bool isLoading = false,
+    VoidCallback? action,
+    String? actionLabel,
+  }) {
+    final theme = Theme.of(context);
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.8,
+        ),
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        child: ClipRRect(
+          borderRadius: const BorderRadius.only(
+            topRight: Radius.circular(20),
+            bottomLeft: Radius.circular(4),
+            bottomRight: Radius.circular(20),
+          ),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest.withOpacity(
+                  0.5,
+                ),
+                border: Border.all(color: Colors.white.withOpacity(0.2)),
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(20),
+                  bottomLeft: Radius.circular(4),
+                  bottomRight: Radius.circular(20),
+                ),
+              ),
+              child: isLoading
+                  ? SpinKitThreeBounce(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      size: 18,
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          text,
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            height: 1.4,
+                          ),
+                        ),
+                        if (action != null && actionLabel != null) ...[
+                          const SizedBox(height: 12),
+                          ElevatedButton.icon(
+                            onPressed: action,
+                            icon: const Icon(Icons.open_in_new, size: 16),
+                            label: Text(actionLabel),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: theme.colorScheme.primary
+                                  .withOpacity(0.8),
+                              foregroundColor: theme.colorScheme.onPrimary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUserBubble(String text) {
+    final theme = Theme.of(context);
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(4),
+            bottomLeft: Radius.circular(20),
+            bottomRight: Radius.circular(20),
+          ),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(color: theme.colorScheme.onPrimary, height: 1.4),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuestionChips() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Wrap(
+        spacing: 8.0,
+        runSpacing: 8.0,
+        alignment: WrapAlignment.end,
+        children: _remainingQuestions.map((q) {
+          return InkWell(
+            onTap: () => _handleQuestion(q['id'], q['text']),
+            borderRadius: BorderRadius.circular(16),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16.0),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16.0),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.2),
                     ),
                   ),
+                  child: Text(q['text']),
                 ),
-                const SizedBox(height: 20),
-                Center(
-                  child: Text(
-                    'Copyright © Hendril Mendes, $currentYear',
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ),
-                Text(
-                  AppLocalizations.of(context)!.copyright,
-                  style: const TextStyle(fontSize: 12),
-                ),
-                const Divider(),
-                const SizedBox(height: 10),
-                Text(
-                  AppLocalizations.of(context)!.appDesc,
-                  style: const TextStyle(fontSize: 14.0),
-                ),
-                const SizedBox(height: 10),
-                const Divider(),
-                Card(
-                  clipBehavior: Clip.hardEdge,
-                  margin: const EdgeInsets.all(8.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ListTile(
-                        title: Text(AppLocalizations.of(context)!.version),
-                        subtitle: Text('v$appVersion | Build: $appBuild'),
-                        leading: const Icon(Icons.android_outlined),
-                        tileColor: Theme.of(context).listTileTheme.tileColor,
-                        onTap: () => _showReleaseInfo(context),
-                      ),
-                      ListTile(
-                        title: Text(AppLocalizations.of(context)!.privacy),
-                        subtitle: Text(
-                          AppLocalizations.of(context)!.privacySub,
-                        ),
-                        leading: const Icon(Icons.shield_outlined),
-                        tileColor: Theme.of(context).listTileTheme.tileColor,
-                        onTap: () {
-                          launchUrl(
-                            Uri.parse(
-                              'https://br-newsdroid.blogspot.com/p/politica-de-privacidade.html',
-                            ),
-                            mode: LaunchMode.inAppBrowserView,
-                          );
-                        },
-                      ),
-                      ListTile(
-                        title: Text(AppLocalizations.of(context)!.sourceCode),
-                        subtitle: Text(
-                          AppLocalizations.of(context)!.sourceCodeSub,
-                        ),
-                        leading: const Icon(Icons.code_outlined),
-                        tileColor: Theme.of(context).listTileTheme.tileColor,
-                        onTap: () {
-                          launchUrl(
-                            Uri.parse(
-                              'https://github.com/hendrilmendes/Wally/',
-                            ),
-                            mode: LaunchMode.inAppBrowserView,
-                          );
-                        },
-                      ),
-                      ListTile(
-                        title: Text(AppLocalizations.of(context)!.openSource),
-                        subtitle: Text(
-                          AppLocalizations.of(context)!.openSourceSub,
-                        ),
-                        leading: const Icon(Icons.folder_open),
-                        tileColor: Theme.of(context).listTileTheme.tileColor,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => LicensePage(
-                                    applicationName:
-                                        AppLocalizations.of(context)!.appName,
-                                  ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
-          ],
-        ),
+          );
+        }).toList(),
       ),
     );
   }

@@ -61,7 +61,8 @@ import 'app_localizations_pt.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -69,7 +70,8 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -81,17 +83,16 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
-    delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
   /// A list of this localizations delegate's supported locales.
-  static const List<Locale> supportedLocales = <Locale>[
-    Locale('pt')
-  ];
+  static const List<Locale> supportedLocales = <Locale>[Locale('pt')];
 
   /// No description provided for @appName.
   ///
@@ -123,12 +124,6 @@ abstract class AppLocalizations {
   /// **'Todos os direitos reservados'**
   String get copyright;
 
-  /// No description provided for @appDesc.
-  ///
-  /// In pt, this message translates to:
-  /// **'Um assistente virtual'**
-  String get appDesc;
-
   /// No description provided for @version.
   ///
   /// In pt, this message translates to:
@@ -141,12 +136,6 @@ abstract class AppLocalizations {
   /// **'Política de Privacidade'**
   String get privacy;
 
-  /// No description provided for @privacySub.
-  ///
-  /// In pt, this message translates to:
-  /// **'Termos que garantem a sua privacidade'**
-  String get privacySub;
-
   /// No description provided for @sourceCode.
   ///
   /// In pt, this message translates to:
@@ -156,7 +145,7 @@ abstract class AppLocalizations {
   /// No description provided for @sourceCodeSub.
   ///
   /// In pt, this message translates to:
-  /// **'Projeto disponível no GitHub'**
+  /// **'Todo o meu cerebro, ou melhor, meu código fonte está disponível no GitHub'**
   String get sourceCodeSub;
 
   /// No description provided for @openSource.
@@ -168,20 +157,8 @@ abstract class AppLocalizations {
   /// No description provided for @openSourceSub.
   ///
   /// In pt, this message translates to:
-  /// **'Softwares de terceiros usados na construção do app'**
+  /// **'Eu fui construído com base nestas fantásticas ferramentas de código aberto.'**
   String get openSourceSub;
-
-  /// No description provided for @interface.
-  ///
-  /// In pt, this message translates to:
-  /// **'Interface'**
-  String get interface;
-
-  /// No description provided for @outhers.
-  ///
-  /// In pt, this message translates to:
-  /// **'Outros'**
-  String get outhers;
 
   /// No description provided for @theme.
   ///
@@ -230,18 +207,6 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'O Dynamic Colors proporciona uma interface agradável de acordo com o seu papel de parede'**
   String get dynamicColorsSub;
-
-  /// No description provided for @update.
-  ///
-  /// In pt, this message translates to:
-  /// **'Atualizações'**
-  String get update;
-
-  /// No description provided for @updateSub.
-  ///
-  /// In pt, this message translates to:
-  /// **'Toque para buscar por novas versões do app'**
-  String get updateSub;
 
   /// No description provided for @support.
   ///
@@ -306,7 +271,7 @@ abstract class AppLocalizations {
   /// No description provided for @noUpdateSub.
   ///
   /// In pt, this message translates to:
-  /// **'Tudo em dias parceiro 🤠'**
+  /// **'Tudo em dias parceiro'**
   String get noUpdateSub;
 
   /// No description provided for @alreadyReviewed.
@@ -324,7 +289,7 @@ abstract class AppLocalizations {
   /// No description provided for @wallyWelcome.
   ///
   /// In pt, this message translates to:
-  /// **'Eu sou Wally, seu assistente virtual. Como posso ajudar você hoje?'**
+  /// **'Wally na área! O que vamos resolver hoje?'**
   String get wallyWelcome;
 
   /// No description provided for @weather.
@@ -348,7 +313,7 @@ abstract class AppLocalizations {
   /// No description provided for @tarefasApp.
   ///
   /// In pt, this message translates to:
-  /// **'Tarefas'**
+  /// **'Tá na Lista'**
   String get tarefasApp;
 
   /// No description provided for @incrementText.
@@ -396,7 +361,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeLogin.
   ///
   /// In pt, this message translates to:
-  /// **'Bem vindo ao nosso app, aproveite 😁'**
+  /// **'Que bom ver por aqui!\nVocê pode fazer login para acessar mais recursos.'**
   String get homeLogin;
 
   /// No description provided for @googleLogin.
@@ -410,9 +375,130 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Desconectar'**
   String get desconect;
+
+  /// No description provided for @acceptTerms.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ao continuar, você concorda com a nossa '**
+  String get acceptTerms;
+
+  /// No description provided for @wallyWelcomeAbout.
+  ///
+  /// In pt, this message translates to:
+  /// **'Olá! Sou Wally. Fico feliz que queira saber mais sobre mim. O que você gostaria de descobrir?'**
+  String get wallyWelcomeAbout;
+
+  /// No description provided for @supportAndFeedback.
+  ///
+  /// In pt, this message translates to:
+  /// **'Suporte e Feedback'**
+  String get supportAndFeedback;
+
+  /// No description provided for @appearance.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aparência'**
+  String get appearance;
+
+  /// No description provided for @temporaryAccess.
+  ///
+  /// In pt, this message translates to:
+  /// **'Modo de Acesso Temporário'**
+  String get temporaryAccess;
+
+  /// No description provided for @chat.
+  ///
+  /// In pt, this message translates to:
+  /// **'Conversar'**
+  String get chat;
+
+  /// No description provided for @typeSomething.
+  ///
+  /// In pt, this message translates to:
+  /// **'Digite algo...'**
+  String get typeSomething;
+
+  /// No description provided for @guestMode.
+  ///
+  /// In pt, this message translates to:
+  /// **'Modo Convidado'**
+  String get guestMode;
+
+  /// No description provided for @login.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fazer Login'**
+  String get login;
+
+  /// No description provided for @whoCreatedYou.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quem te criou?'**
+  String get whoCreatedYou;
+
+  /// No description provided for @whatIsYourVersion.
+  ///
+  /// In pt, this message translates to:
+  /// **'Qual é a sua versão?'**
+  String get whatIsYourVersion;
+
+  /// No description provided for @creatorResponse.
+  ///
+  /// In pt, this message translates to:
+  /// **'Eu fui criado por um cara chamado Hendril Mendes,\nele e apaixonado por tecnologia e inovação'**
+  String get creatorResponse;
+
+  /// No description provided for @seeGitHub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Veja no GitHub'**
+  String get seeGitHub;
+
+  /// No description provided for @openRepository.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir Repositório'**
+  String get openRepository;
+
+  /// No description provided for @seeLicenses.
+  ///
+  /// In pt, this message translates to:
+  /// **'Veja Licenças'**
+  String get seeLicenses;
+
+  /// No description provided for @privacyPolicyResponse.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nossa política de privacidade garante que suas informações pessoais não serão compartilhadas com terceiros sem o seu consentimento explícito.'**
+  String get privacyPolicyResponse;
+
+  /// No description provided for @seePolicy.
+  ///
+  /// In pt, this message translates to:
+  /// **'Veja a Política de Privacidade'**
+  String get seePolicy;
+
+  /// No description provided for @seeChangelog.
+  ///
+  /// In pt, this message translates to:
+  /// **'Veja o Changelog'**
+  String get seeChangelog;
+
+  /// No description provided for @versionResponse.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atualmente estou na versão {version} e continuo recebendo melhorias para te ajudar cada vez mais.'**
+  String versionResponse(String version);
+
+  /// No description provided for @hopeIHelped.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fico feliz em ajudar, até a próxima :)'**
+  String get hopeIHelped;
 }
 
-class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -421,24 +507,24 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['pt'].contains(locale.languageCode);
+  bool isSupported(Locale locale) =>
+      <String>['pt'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
-
-
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'pt': return AppLocalizationsPt();
+    case 'pt':
+      return AppLocalizationsPt();
   }
 
   throw FlutterError(
     'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
     'an issue with the localizations generation tool. Please file an issue '
     'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.'
+    'that was used.',
   );
 }

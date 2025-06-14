@@ -64,6 +64,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1092048577683',
     projectId: 'wally-95c84',
     storageBucket: 'wally-95c84.firebasestorage.app',
+    androidClientId: '1092048577683-48n9im1530c1mcrr6ome0fbbp400k9u2.apps.googleusercontent.com',
+    iosClientId: '1092048577683-pelr7abo1f02gd9v6lr7r2gv0lag8vph.apps.googleusercontent.com',
     iosBundleId: 'com.github.hendrilmendes.projectx',
   );
 
@@ -73,6 +75,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1092048577683',
     projectId: 'wally-95c84',
     storageBucket: 'wally-95c84.firebasestorage.app',
+    androidClientId: '1092048577683-48n9im1530c1mcrr6ome0fbbp400k9u2.apps.googleusercontent.com',
+    iosClientId: '1092048577683-kj06icml899kn3uc83h9f6g59a3jk76c.apps.googleusercontent.com',
     iosBundleId: 'com.example.projectx',
   );
 
@@ -85,4 +89,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'wally-95c84.firebasestorage.app',
     measurementId: 'G-SJV7HDYD48',
   );
+
 }

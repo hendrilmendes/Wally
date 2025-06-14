@@ -1,35 +1,49 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:projectx/commands/commands.dart';
+
+enum AiModelType { fast, smart }
 
 class AIService {
   final String apiKey;
 
   AIService({required this.apiKey});
 
-  Future<String> handleComplexQuestion(String message) async {
+  Future<String> getAiResponse(
+    String prompt, {
+    required AiModelType modelType,
+  }) async {
+    String modelName;
+    switch (modelType) {
+      case AiModelType.fast:
+        modelName = "google/gemini-2.0-flash-exp:free";
+        break;
+      case AiModelType.smart:
+        modelName = "meta-llama/llama-4-maverick:free";
+        break;
+    }
+
     final response = await http.post(
-      Uri.parse('https://api.deepseek.com/v1/chat/completions'),
+      Uri.parse('https://openrouter.ai/api/v1/chat/completions'),
       headers: {
         'Authorization': 'Bearer $apiKey',
+        'HTTP-Referer': 'https://hendrilmendes.github.io/Wally/',
         'Content-Type': 'application/json',
       },
       body: jsonEncode({
-        "model": "deepseek-chat",
-        "messages": [{"role": "user", "content": message}],
-        "temperature": 0.7,
-        "max_tokens": 200,
+        "model": modelName,
+        "messages": [
+          {"role": "user", "content": prompt},
+        ],
       }),
     );
 
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(response.body);
       return jsonResponse['choices'][0]['message']['content'];
+    } else {
+      throw Exception(
+        "Erro na API do modelo '$modelName' (${response.statusCode}): ${response.body}",
+      );
     }
-    throw Exception("Erro na API: ${response.statusCode}");
-  }
-
-  static String? handleSimpleQuery(String message) {
-    return CommandHandler.handleSimpleResponse(message);
   }
 }

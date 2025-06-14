@@ -35,7 +35,10 @@
         </activity>
         <meta-data
             android:name="flutterEmbedding"
-            android:value="2" />   
+            android:value="2" />
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="langid" />
     </application>
 '   <queries>
         <intent>

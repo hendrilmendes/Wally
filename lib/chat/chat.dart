@@ -33,40 +33,75 @@ class ChatBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final alignment =
-        role == Role.user ? CrossAxisAlignment.end : CrossAxisAlignment.start;
-    final bgColor = role == Role.user ? Colors.blue[100] : Colors.grey[300];
-    final textColor = role == Role.user ? Colors.black : Colors.black;
+    final isUser = role == Role.user;
+    final alignment = isUser
+        ? CrossAxisAlignment.end
+        : CrossAxisAlignment.start;
+    final mainAxisAlignment = isUser
+        ? MainAxisAlignment.end
+        : MainAxisAlignment.start;
+    final bubbleColor = isUser ? Colors.blueAccent : Colors.white;
+    final textColor = isUser ? Colors.white : Colors.black87;
+    final borderRadius = BorderRadius.only(
+      topLeft: const Radius.circular(20),
+      topRight: const Radius.circular(20),
+      bottomLeft: isUser ? const Radius.circular(20) : const Radius.circular(4),
+      bottomRight: isUser
+          ? const Radius.circular(4)
+          : const Radius.circular(20),
+    );
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
       child: Column(
         crossAxisAlignment: alignment,
         children: [
           Row(
-            mainAxisAlignment:
-                role == Role.user
-                    ? MainAxisAlignment.end
-                    : MainAxisAlignment.start,
+            mainAxisAlignment: mainAxisAlignment,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              if (role == Role.iA) ...[photo, const SizedBox(width: 8.0)],
+              if (!isUser) ...[
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Colors.grey[200],
+                  child: photo,
+                ),
+                const SizedBox(width: 10),
+              ],
               Flexible(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: bgColor,
-                    borderRadius: BorderRadius.circular(12.0),
+                    color: bubbleColor,
+                    borderRadius: borderRadius,
+                    boxShadow: [
+                      BoxShadow(
+                        // ignore: deprecated_member_use
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                  padding: const EdgeInsets.all(12.0),
-                  child:
-                      isLoading
-                          ? const SpinKitThreeBounce(
-                            color: Colors.blue,
-                            size: 30.0,
-                          )
-                          : Text(content, style: TextStyle(color: textColor)),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 14,
+                    horizontal: 18,
+                  ),
+                  child: isLoading
+                      ? const SpinKitThreeBounce(color: Colors.blue, size: 24.0)
+                      : Text(
+                          content,
+                          style: TextStyle(color: textColor, fontSize: 16),
+                        ),
                 ),
               ),
-              if (role == Role.user) ...[const SizedBox(width: 8.0), photo],
+              if (isUser) ...[
+                const SizedBox(width: 10),
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Colors.blue[100],
+                  child: photo,
+                ),
+              ],
             ],
           ),
         ],

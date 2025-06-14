@@ -16,19 +16,12 @@ jobs:
     - name: Set up Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.27.0'
+        flutter-version: '3.32.0'
 
     - name: Install dependencies
       run: flutter pub get
 
-    - name: CORS
-      run: dart pub global activate flutter_cors 
-
-    - name: CORS Disable
-      run: fluttercors --disable 
-
     - name: Build web
-      run: flutter build web --release
 
     - name: Deploy to GitHub Pages
       env:

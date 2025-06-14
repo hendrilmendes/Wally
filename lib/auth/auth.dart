@@ -18,8 +18,8 @@ class AuthService {
       }
 
       // Realizar login com Google
-      final GoogleSignInAccount? googleSignInAccount =
-          await _googleSignIn.signIn();
+      final GoogleSignInAccount? googleSignInAccount = await _googleSignIn
+          .signIn();
       if (googleSignInAccount == null) {
         if (kDebugMode) print("Login cancelado pelo usuário.");
         return null;
@@ -52,6 +52,18 @@ class AuthService {
       return null;
     } on Exception catch (e) {
       if (kDebugMode) print('Erro desconhecido na autenticação: $e');
+      return null;
+    }
+  }
+
+  Future<User?> signInAnonymously() async {
+    try {
+      final UserCredential userCredential = await _auth.signInAnonymously();
+      return userCredential.user;
+    } catch (e) {
+      if (kDebugMode) {
+        print("Erro no login anônimo: $e");
+      }
       return null;
     }
   }

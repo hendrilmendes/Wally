@@ -2,6 +2,23 @@
 
 ======================================================
 
+## [2.0.0] (Em desenvolvimento)
+
+## Alterações
+
+- Novo design, moderno e eficiente
+
+### Features
+
+- Modo Convidado para quem quiser uma conversa rápida
+- Novos modelos de IA (Gemini e Llama)
+
+### Correções
+
+- Correções de bugs
+
+======================================================
+
 ## [1.1.0]
 
 ## Alterações
