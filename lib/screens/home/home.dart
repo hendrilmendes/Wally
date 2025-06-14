@@ -30,9 +30,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final TextEditingController _controller = TextEditingController();
   final List<chat.ChatMessage> _messages = [];
-  // NOVO: Chave para controlar a AnimatedList
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
-
   final String _iaPhoto = 'assets/img/robot_photo.png';
   final stt.SpeechToText _speech = stt.SpeechToText();
   final FlutterTts _flutterTts = FlutterTts();
@@ -45,6 +43,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int _desktopNavIndex = 0;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
+  String? _speakingMessageId;
 
   @override
   void initState() {
@@ -61,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
-
+    _initializeTts();
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
@@ -91,6 +90,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (kDebugMode) print('Error getting API key: $e');
       throw Exception('Failed to get API key');
     }
+  }
+
+  void _initializeTts() {
+    _flutterTts.setCompletionHandler(() {
+      if (mounted) setState(() => _speakingMessageId = null);
+    });
+    _flutterTts.setErrorHandler((msg) {
+      if (mounted) setState(() => _speakingMessageId = null);
+    });
   }
 
   @override
@@ -235,15 +243,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
       if (mounted) {
         _removeLoadingIndicator();
-        _addMessage(
-          chat.ChatMessage(
-            role: chat.Role.iA,
-            content: aiResponse,
-            name: 'Wally',
-          ),
+        final aiMessage = chat.ChatMessage(
+          role: chat.Role.iA,
+          content: aiResponse,
+          name: 'Wally',
         );
+        _addMessage(aiMessage);
+
+        if (fromAudio) {
+          await _speak(aiResponse, locale, aiMessage.id);
+        }
       }
-      if (fromAudio) await _speak(aiResponse, locale);
     } catch (e) {
       _showError(e.toString());
     }
@@ -328,22 +338,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return input.trim();
   }
 
-  Future<void> _speak(String text, String locale) async {
+  Future<void> _speak(String text, String locale, String messageId) async {
+    if (mounted) {
+      setState(() => _speakingMessageId = messageId);
+    }
+
     await _flutterTts.setLanguage(locale);
     await _flutterTts.setPitch(1.0);
     await _flutterTts.setVolume(1.0);
 
-    await _flutterTts.awaitSpeakCompletion(true);
+    final emojiRegex = RegExp(
+      r'(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])',
+    );
+    final cleanedText = text.replaceAll(emojiRegex, '');
 
-    final sentences = text.split(RegExp(r'(?<=[.!?])\s+'));
-    for (var sentence in sentences) {
-      if (sentence.isNotEmpty) {
-        await _flutterTts.setSpeechRate(0.5);
-
-        await _flutterTts.speak(sentence);
-
-        await Future.delayed(const Duration(milliseconds: 300));
-      }
+    if (cleanedText.trim().isNotEmpty) {
+      await _flutterTts.setSpeechRate(0.6);
+      await _flutterTts.speak(cleanedText);
+    } else {
+      if (mounted) setState(() => _speakingMessageId = null);
     }
   }
 
@@ -615,7 +628,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 80,
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Row(
@@ -841,6 +853,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget _buildMessageBubble(chat.ChatMessage message) {
     final isUser = message.role == chat.Role.user;
     final theme = Theme.of(context);
+    final bool isSpeaking = message.id == _speakingMessageId;
 
     final alignment = isUser
         ? CrossAxisAlignment.end
@@ -871,6 +884,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         crossAxisAlignment: alignment,
         children: [
           ClipRRect(
+            borderRadius: borderRadius,
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
               enabled: !isUser,
@@ -891,13 +905,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
                 child: message.isLoading
                     ? SpinKitThreeBounce(color: textColor, size: 18)
-                    : Text(
-                        message.content,
-                        style: TextStyle(
-                          color: textColor,
-                          fontSize: 16,
-                          height: 1.4,
-                        ),
+                    : Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              message.content,
+                              style: TextStyle(
+                                color: textColor,
+                                fontSize: 16,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                          if (isSpeaking)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 8.0),
+                              child: SpinKitWave(
+                                color: textColor,
+                                size: 18.0,
+                                type: SpinKitWaveType.start,
+                              ),
+                            ),
+                        ],
                       ),
               ),
             ),

@@ -11,7 +11,7 @@ Um assistente virtual
 ##
 
 ### Recursos:
-* Integração com DeepSeek
+* Integração com Google Gemini e Meta Llama
 * Integração com Open-Meteo
 ##
 

@@ -11,7 +11,7 @@
 ### Features
 
 - Modo Convidado para quem quiser uma conversa rápida
-- Novos modelos de IA (Gemini e Llama)
+- Novos modelos de IA (Google Gemini e Meta Llama)
 
 ### Correções
 

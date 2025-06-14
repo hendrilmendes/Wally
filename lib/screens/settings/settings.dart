@@ -6,9 +6,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:projectx/auth/auth.dart'; // Importe seu AuthService
+import 'package:projectx/auth/auth.dart';
 import 'package:projectx/l10n/app_localizations.dart';
-import 'package:projectx/screens/login/login.dart'; // Importe sua LoginScreen
+import 'package:projectx/screens/login/login.dart';
 import 'package:projectx/theme/theme.dart';
 import 'package:projectx/widgets/settings/about.dart';
 import 'package:projectx/widgets/settings/dynamic_colors.dart';
@@ -104,7 +104,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   l10n.settings,
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
-                    // O título só aparece quando o header está quase recolhido
                     color: theme.colorScheme.onSurface.withOpacity(
                       1.0 - _headerContentOpacity,
                     ),
@@ -158,9 +157,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // --- WIDGETS DE CONSTRUÇÃO DA UI ---
-
-  // MÉTODO PRINCIPAL DO CABEÇALHO - AGORA ELE DELEGA O CONTEÚDO
   Widget _buildUserInfoHeader(ThemeData theme, double contentOpacity) {
     final bool isGuest = _user?.isAnonymous ?? true;
 
@@ -171,7 +167,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           color: Colors.black.withOpacity(0.1),
           child: Opacity(
             opacity: contentOpacity,
-            // O conteúdo (logado ou convidado) é inserido aqui
             child: isGuest
                 ? _buildGuestContent(theme)
                 : _buildLoggedInContent(theme),
@@ -181,7 +176,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // NOVO: Widget de conteúdo para usuário LOGADO
   Widget _buildLoggedInContent(ThemeData theme) {
     final photoUrl = _user?.photoURL;
     return Column(
@@ -220,7 +214,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // NOVO: Widget de conteúdo para usuário CONVIDADO
   Widget _buildGuestContent(ThemeData theme) {
     final l10n = AppLocalizations.of(context)!;
     return Column(

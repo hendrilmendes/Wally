@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:uuid/uuid.dart';
 
 class ChatMessage {
+  final String id;
   final Role role;
   final String content;
   final String name;
@@ -12,7 +14,7 @@ class ChatMessage {
     required this.content,
     required this.name,
     this.isLoading = false,
-  });
+  }): id = const Uuid().v4();
 }
 
 enum Role { user, iA }

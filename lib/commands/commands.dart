@@ -1,18 +1,8 @@
 import 'package:intl/intl.dart';
 
-// NOVO: Enum para categorizar os tipos de comando.
-// Isso nos ajuda a dar um contexto melhor para a IA.
-enum CommandType {
-  time,
-  date,
-  greeting,
-  identity,
-  function,
-  unknown,
-}
+enum CommandType { time, date, greeting, identity, function, unknown }
 
 class CommandHandler {
-  // ESTRUTURA MODIFICADA: Agora o mapa associa um padrão a um CommandType.
   static final Map<RegExp, CommandType> _commandPatterns = {
     RegExp(r'\b(horas?|que horas são)\b'): CommandType.time,
     RegExp(r'\b(data|que dia é hoje)\b'): CommandType.date,
@@ -22,24 +12,19 @@ class CommandHandler {
     RegExp(r'\b(função|o que você faz)\b'): CommandType.function,
   };
 
-  // NOVO: Método para obter a hora atual formatada.
   static String _getCurrentTime() {
     return DateFormat('HH:mm').format(DateTime.now());
   }
 
-  // NOVO: Método para obter a data atual formatada.
   static String _getCurrentDate() {
-    // Exemplo: "13 de junho de 2025"
     return DateFormat("d 'de' MMMM 'de' y", 'pt_BR').format(DateTime.now());
   }
-  
-  // MÉTODO ATUALIZADO: Agora ele usa o CommandType para gerar a resposta.
+
   static String? handleSimpleResponse(String message) {
     final text = message.toLowerCase();
-    
+
     for (final entry in _commandPatterns.entries) {
       if (entry.key.hasMatch(text)) {
-        // Encontrou um padrão, agora retorna a resposta com base no tipo.
         switch (entry.value) {
           case CommandType.time:
             return _getCurrentTime();
@@ -62,7 +47,6 @@ class CommandHandler {
     return null;
   }
 
-  // NOVO: Método que a HomeScreen usará para obter o contexto.
   static CommandType getCommandType(String message) {
     final text = message.toLowerCase();
     for (final entry in _commandPatterns.entries) {
@@ -73,13 +57,10 @@ class CommandHandler {
     return CommandType.unknown;
   }
 
-  // O método isSimpleQuestion agora pode ser simplificado, ou podemos
-  // simplesmente verificar se handleSimpleResponse não é nulo.
   static bool isSimpleQuestion(String message) {
     return handleSimpleResponse(message) != null;
   }
 
-  // MÉTODOS DE NAVEGAÇÃO (mantidos como estavam)
   static bool shouldCheckWeather(String message) {
     final text = message.toLowerCase();
     return text.contains('tempo') ||

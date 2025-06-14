@@ -1,29 +1,24 @@
 // ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
-import 'dart:ui'; // Import necessário para o BackdropFilter
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:projectx/l10n/app_localizations.dart';
 import 'package:projectx/theme/theme.dart';
-import 'package:provider/provider.dart'; // Importe o Provider aqui se não estiver global
+import 'package:provider/provider.dart';
 
 class ThemeSettings extends StatelessWidget {
   final ThemeModel themeModel;
 
   const ThemeSettings({super.key, required this.themeModel});
 
-  // MÉTODO _showThemeDialog TOTALMENTE REFEITO
   void _showThemeDialog(BuildContext context) {
     showDialog(
       context: context,
-      // Permite que o fundo seja transparente
       barrierColor: Colors.black.withOpacity(0.3),
       builder: (BuildContext context) {
-        // StatefulBuilder é essencial para que a UI do diálogo se atualize
-        // ao selecionar uma nova opção, sem fechar a tela de fundo.
         return StatefulBuilder(
           builder: (context, setState) {
-            // O widget Dialog nos dá o formato base de um diálogo
             return Dialog(
               elevation: 0,
               backgroundColor: Colors.transparent,
@@ -66,9 +61,7 @@ class ThemeSettings extends StatelessWidget {
                           groupValue: themeModel.themeMode,
                           onChanged: (newValue) {
                             themeModel.changeThemeMode(newValue);
-                            // setState é chamado para atualizar o ícone de check
                             setState(() {});
-                            // Um pequeno delay antes de fechar dá tempo para a animação do tap
                             Future.delayed(
                               const Duration(milliseconds: 200),
                             ).then((_) => Navigator.pop(context));
@@ -112,7 +105,6 @@ class ThemeSettings extends StatelessWidget {
     );
   }
 
-  // NOVO: Widget auxiliar para construir cada opção de tema de forma estilizada
   Widget _buildThemeOption({
     required BuildContext context,
     required String title,
@@ -164,11 +156,9 @@ class ThemeSettings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // É necessário obter o ThemeModel aqui para passar para a função
     final themeModel = Provider.of<ThemeModel>(context, listen: false);
     final appLocalizations = AppLocalizations.of(context)!;
 
-    // Define o subtítulo com base no tema atual
     String getSubtitle() {
       switch (themeModel.themeMode) {
         case ThemeModeType.light:

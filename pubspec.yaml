@@ -98,6 +98,8 @@ dependencies:
 # Url Launcher
   url_launcher: ^6.3.1
 
+  uuid: ^4.5.1
+
 # Wearther Icons
   weather_icons: ^3.0.0
 

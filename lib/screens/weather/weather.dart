@@ -10,7 +10,6 @@ import 'package:weather_icons/weather_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 
-// --- DATA MODELS (Modelos de Dados) ---
 class WeatherData {
   final String cityName;
   final int temperature;
@@ -43,23 +42,29 @@ class HourlyForecast {
   });
 }
 
-// --- API SERVICE (Serviço de busca de dados) ---
 class WeatherService {
-  static const String _nominatimUrl = 'https://nominatim.openstreetmap.org/reverse?format=json';
+  static const String _nominatimUrl =
+      'https://nominatim.openstreetmap.org/reverse?format=json';
   static const String _openMeteoUrl = 'https://api.open-meteo.com/v1/forecast';
 
   Future<WeatherData> getWeatherForCurrentLocation() async {
     Position position = await _determinePosition();
 
     final reverseGeocodingResponse = await http.get(
-      Uri.parse('$_nominatimUrl&lat=${position.latitude}&lon=${position.longitude}'),
+      Uri.parse(
+        '$_nominatimUrl&lat=${position.latitude}&lon=${position.longitude}',
+      ),
     );
     if (reverseGeocodingResponse.statusCode != 200) {
       throw Exception('Falha ao obter o nome da cidade');
     }
 
     final geoJson = jsonDecode(reverseGeocodingResponse.body);
-    String cityName = geoJson['address']?['city'] ?? geoJson['address']?['town'] ?? geoJson['address']?['village'] ?? 'Local Desconhecido';
+    String cityName =
+        geoJson['address']?['city'] ??
+        geoJson['address']?['town'] ??
+        geoJson['address']?['village'] ??
+        'Local Desconhecido';
 
     final weatherResponse = await http.get(
       Uri.parse(
@@ -135,7 +140,6 @@ class WeatherService {
   }
 }
 
-// --- WIDGET DA TELA DE CLIMA (ADAPTÁVEL AO TEMA) ---
 class WeatherScreen extends StatefulWidget {
   const WeatherScreen({super.key});
   @override
@@ -143,7 +147,8 @@ class WeatherScreen extends StatefulWidget {
   _WeatherScreenState createState() => _WeatherScreenState();
 }
 
-class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateMixin {
+class _WeatherScreenState extends State<WeatherScreen>
+    with TickerProviderStateMixin {
   final WeatherService _weatherService = WeatherService();
   Future<WeatherData>? _weatherDataFuture;
   late AnimationController _animationController;
@@ -162,10 +167,14 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0)
-        .animate(CurvedAnimation(parent: _slideController, curve: Curves.easeIn));
-    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic));
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeIn));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
     _fetchWeather();
   }
 
@@ -192,7 +201,6 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
         leading: const BackButton(),
       ),
       body: Container(
-        // Fundo em gradiente para dar base ao efeito de vidro
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -213,7 +221,10 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
               return Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24.0),
-                  child: Text("Erro: ${snapshot.error}", textAlign: TextAlign.center),
+                  child: Text(
+                    "Erro: ${snapshot.error}",
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               );
             }
@@ -232,10 +243,7 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Column(
-        children: [
-          _buildHeroSection(data),
-          _buildDetailsPanel(data),
-        ],
+        children: [_buildHeroSection(data), _buildDetailsPanel(data)],
       ),
     );
   }
@@ -253,7 +261,10 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
               width: 150,
               height: 150,
               child: CustomPaint(
-                painter: WeatherAnimationPainter(_animationController, data.description),
+                painter: WeatherAnimationPainter(
+                  _animationController,
+                  data.description,
+                ),
                 size: const Size.square(150),
               ),
             ),
@@ -317,16 +328,30 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
                     children: [
                       Text(
                         "Previsão",
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       _buildHourlyChart(data.hourlyForecast),
                       const SizedBox(height: 24),
                       Row(
                         children: [
-                          Expanded(child: _buildInfoTile(WeatherIcons.strong_wind, 'Vento', '${data.windSpeed} km/h')),
+                          Expanded(
+                            child: _buildInfoTile(
+                              WeatherIcons.strong_wind,
+                              'Vento',
+                              '${data.windSpeed} km/h',
+                            ),
+                          ),
                           const SizedBox(width: 16),
-                          Expanded(child: _buildInfoTile(WeatherIcons.humidity, 'Umidade', '${data.humidity}%')),
+                          Expanded(
+                            child: _buildInfoTile(
+                              WeatherIcons.humidity,
+                              'Umidade',
+                              '${data.humidity}%',
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -348,7 +373,12 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
     );
   }
 
-  Widget _buildInfoTile(IconData icon, String title, String value, {bool isRecommendation = false}) {
+  Widget _buildInfoTile(
+    IconData icon,
+    String title,
+    String value, {
+    bool isRecommendation = false,
+  }) {
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
@@ -365,7 +395,10 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
               const SizedBox(width: 8),
               Text(
                 title,
-                style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurfaceVariant),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -389,9 +422,14 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
     final primaryColor = theme.colorScheme.primary;
     final onSurfaceColor = theme.colorScheme.onSurface;
 
-    final spots = forecasts.asMap().entries.map(
-          (entry) => FlSpot(entry.key.toDouble(), entry.value.temperature.toDouble()),
-        ).toList();
+    final spots = forecasts
+        .asMap()
+        .entries
+        .map(
+          (entry) =>
+              FlSpot(entry.key.toDouble(), entry.value.temperature.toDouble()),
+        )
+        .toList();
     final minTemp = forecasts.map((e) => e.temperature).reduce(min);
     final maxTemp = forecasts.map((e) => e.temperature).reduce(max);
 
@@ -401,9 +439,15 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
         LineChartData(
           gridData: const FlGridData(show: false),
           titlesData: FlTitlesData(
-            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            leftTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
@@ -415,7 +459,10 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Text(
                         DateFormat('HH:mm').format(forecasts[index].time),
-                        style: TextStyle(fontSize: 12, color: onSurfaceColor.withOpacity(0.7)),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: onSurfaceColor.withOpacity(0.7),
+                        ),
                       ),
                     );
                   }
@@ -438,7 +485,10 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
               belowBarData: BarAreaData(
                 show: true,
                 gradient: LinearGradient(
-                  colors: [primaryColor.withOpacity(0.4), primaryColor.withOpacity(0.0)],
+                  colors: [
+                    primaryColor.withOpacity(0.4),
+                    primaryColor.withOpacity(0.0),
+                  ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
@@ -451,18 +501,19 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
   }
 }
 
-// --- CLASSE DE ANIMAÇÃO PERSONALIZADA ---
 class WeatherAnimationPainter extends CustomPainter {
   final Animation<double> animation;
   final String weatherDescription;
-  WeatherAnimationPainter(this.animation, this.weatherDescription) : super(repaint: animation);
+  WeatherAnimationPainter(this.animation, this.weatherDescription)
+    : super(repaint: animation);
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     if (weatherDescription.contains('Céu limpo')) {
       _drawSun(canvas, size, center);
-    } else if (weatherDescription.contains('Chuva') || weatherDescription.contains('Chuvisco')) {
+    } else if (weatherDescription.contains('Chuva') ||
+        weatherDescription.contains('Chuvisco')) {
       _drawCloud(canvas, size, center, isRaining: true);
     } else {
       _drawCloud(canvas, size, center);
@@ -480,22 +531,57 @@ class WeatherAnimationPainter extends CustomPainter {
       canvas.translate(center.dx, center.dy);
       canvas.rotate(i * pi / 4);
       canvas.drawRect(
-        Rect.fromLTWH(size.width * 0.35, -size.height * 0.02, size.width * 0.25, size.height * 0.04),
+        Rect.fromLTWH(
+          size.width * 0.35,
+          -size.height * 0.02,
+          size.width * 0.25,
+          size.height * 0.04,
+        ),
         paint..color = Colors.yellow.withOpacity(0.8),
       );
       canvas.restore();
     }
-    canvas.drawCircle(center, size.width * 0.3, paint..color = Colors.yellow.shade700);
+    canvas.drawCircle(
+      center,
+      size.width * 0.3,
+      paint..color = Colors.yellow.shade700,
+    );
     canvas.restore();
   }
 
-  void _drawCloud(Canvas canvas, Size size, Offset center, {bool isRaining = false}) {
+  void _drawCloud(
+    Canvas canvas,
+    Size size,
+    Offset center, {
+    bool isRaining = false,
+  }) {
     final paint = Paint()..color = Colors.grey.shade300;
     final path = Path()
       ..moveTo(size.width * 0.2, center.dy + size.height * 0.1)
-      ..cubicTo(size.width * 0.1, center.dy + size.height * 0.1, size.width * 0.1, center.dy - size.height * 0.2, size.width * 0.4, center.dy - size.height * 0.1)
-      ..cubicTo(size.width * 0.5, center.dy - size.height * 0.3, size.width * 0.8, center.dy - size.height * 0.2, size.width * 0.8, center.dy)
-      ..cubicTo(size.width, center.dy, size.width, center.dy + size.height * 0.1, size.width * 0.8, center.dy + size.height * 0.1)
+      ..cubicTo(
+        size.width * 0.1,
+        center.dy + size.height * 0.1,
+        size.width * 0.1,
+        center.dy - size.height * 0.2,
+        size.width * 0.4,
+        center.dy - size.height * 0.1,
+      )
+      ..cubicTo(
+        size.width * 0.5,
+        center.dy - size.height * 0.3,
+        size.width * 0.8,
+        center.dy - size.height * 0.2,
+        size.width * 0.8,
+        center.dy,
+      )
+      ..cubicTo(
+        size.width,
+        center.dy,
+        size.width,
+        center.dy + size.height * 0.1,
+        size.width * 0.8,
+        center.dy + size.height * 0.1,
+      )
       ..close();
     canvas.drawPath(path, paint..color = Colors.white.withOpacity(0.8));
     if (isRaining) {
@@ -508,7 +594,11 @@ class WeatherAnimationPainter extends CustomPainter {
         final startX = size.width * 0.3 + (i * size.width * 0.1);
         final startY = center.dy + size.height * 0.15;
         final currentY = startY + progress * size.height * 0.25;
-        canvas.drawLine(Offset(startX, currentY - 8), Offset(startX, currentY), rainPaint);
+        canvas.drawLine(
+          Offset(startX, currentY - 8),
+          Offset(startX, currentY),
+          rainPaint,
+        );
       }
     }
   }
@@ -517,7 +607,6 @@ class WeatherAnimationPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
-// --- FUNÇÕES DE APOIO ---
 String _getWeatherDescription(int weatherCode) {
   switch (weatherCode) {
     case 0:
@@ -549,13 +638,15 @@ String _getWeatherDescription(int weatherCode) {
 }
 
 String _getPreventionRecommendation(String weatherDescription) {
-  if (weatherDescription.contains('Chuva') || weatherDescription.contains('Chuvisco')) {
+  if (weatherDescription.contains('Chuva') ||
+      weatherDescription.contains('Chuvisco')) {
     return 'Leve um guarda-chuva! Perfeito para uma maratona de séries.';
   }
   if (weatherDescription.contains('Céu limpo')) {
     return 'Dia de sol! Não esqueça o protetor solar e se hidrate.';
   }
-  if (weatherDescription.contains('Nublado') || weatherDescription.contains('Nevoeiro')) {
+  if (weatherDescription.contains('Nublado') ||
+      weatherDescription.contains('Nevoeiro')) {
     return 'Tempo nublado. Um bom livro e uma bebida quente são uma ótima pedida.';
   }
   if (weatherDescription.contains('Neve')) {

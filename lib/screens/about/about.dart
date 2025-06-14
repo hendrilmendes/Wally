@@ -47,7 +47,6 @@ class _AboutPageState extends State<AboutPage> {
     setState(() {
       _conversation.add(message);
     });
-    // Anima o scroll para o final da lista
     Future.delayed(const Duration(milliseconds: 100), () {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
@@ -76,7 +75,7 @@ class _AboutPageState extends State<AboutPage> {
   void _handleQuestion(String id, String questionText) {
     final l10n = AppLocalizations.of(context)!;
     setState(() {
-      _conversation.removeLast(); // Remove os chips
+      _conversation.removeLast();
     });
     _addMessage(_buildUserBubble(questionText));
     _remainingQuestions.removeWhere((q) => q['id'] == id);
@@ -96,7 +95,7 @@ class _AboutPageState extends State<AboutPage> {
             actionLabel = l10n.seeGitHub;
             break;
           case 'version':
-           botResponse = l10n.versionResponse(_appVersion);
+            botResponse = l10n.versionResponse(_appVersion);
             action = () => launchUrl(
               Uri.parse(
                 'https://github.com/hendrilmendes/Wally/releases/tag/$_appVersion',
@@ -154,7 +153,6 @@ class _AboutPageState extends State<AboutPage> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      // Permite que o body fique atrás da AppBar
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(l10n.about),
@@ -163,7 +161,6 @@ class _AboutPageState extends State<AboutPage> {
         centerTitle: true,
       ),
       body: Container(
-        // Fundo em gradiente para dar base ao efeito de vidro
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
