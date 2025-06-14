@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "projectx" "\0"
+            VALUE "CompanyName", "HM Creative Studios" "\0"
+            VALUE "FileDescription", "Wally" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "projectx" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2024 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "projectx.exe" "\0"
-            VALUE "ProductName", "projectx" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2025 Hendril Mendes. All rights reserved." "\0"
+            VALUE "OriginalFilename", "wally.exe" "\0"
+            VALUE "ProductName", "Wally" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
