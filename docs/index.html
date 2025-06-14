@@ -25,55 +25,10 @@
   <title>Wally</title>
   <link rel="manifest" href="manifest.json">
 
-  <style>
-    .lds-dual-ring {
-      display: inline-block;
-      width: 64px;
-      height: 64px;
-    }
-
-    .lds-dual-ring:after {
-      content: " ";
-      display: block;
-      width: 46px;
-      height: 46px;
-      margin: 1px;
-      border-radius: 50%;
-      border: 5px solid #5055FF;
-      border-color: #5055FF transparent #5055FF transparent;
-      animation: lds-dual-ring 1.2s linear infinite;
-    }
-
-    @keyframes lds-dual-ring {
-      0% {
-        transform: rotate(0deg);
-      }
-
-      100% {
-        transform: rotate(360deg);
-      }
-    }
-
-    .container {
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-  </style>
-
 </head>
 
 <body>
 
-  <div class="container">
-    <div class="center">
-      <div class="lds-dual-ring">
-        <div></div>
-        <div></div>
-      </div>
-    </div>
-  </div>
   <!-- This script installs service_worker.js to provide PWA functionality to
      application. For more information, see:
      https://developers.google.com/web/fundamentals/primers/service-workers -->
