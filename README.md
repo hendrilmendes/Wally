@@ -3,7 +3,6 @@ Um assistente virtual
 
 ### Screenshots
 <img src="screenshots/preview.png?raw=true">
-##
 
 ### Versão
 [![made-with-flutter](https://img.shields.io/badge/Made%20with-Flutter-1f425f.svg)](https://flutter.dev/)

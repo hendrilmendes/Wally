@@ -473,7 +473,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 },
                 leading: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Image.asset(_iaPhoto, width: 40, height: 40),
+                  child: Image.asset(_iaPhoto, width: 80, height: 80),
                 ),
                 backgroundColor: Colors.transparent,
                 indicatorColor: theme.colorScheme.primary.withOpacity(0.2),
@@ -631,7 +631,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         elevation: 0,
         title: Row(
           children: [
-            Image.asset(_iaPhoto, width: 40, height: 40),
+            Image.asset(_iaPhoto, width: 80, height: 80),
             const SizedBox(width: 12),
             Text(
               l10n.appName,
