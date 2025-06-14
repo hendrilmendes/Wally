@@ -51,11 +51,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     user = FirebaseAuth.instance.currentUser;
     _iaInitialized = _initializeServices();
     _sendWelcomeMessage();
-    _controller.addListener(() {
-      if (mounted) {
-        setState(() {});
-      }
-    });
+    _controller.addListener(_onTextChanged);
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -75,9 +71,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     try {
       final response = await http.get(
         Uri.https('wally-server.hendrilmendes2015.workers.dev', '/api'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
       );
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
@@ -89,6 +83,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (kDebugMode) print('Error getting API key: $e');
       throw Exception('Failed to get API key');
     }
+  }
+
+  void _onTextChanged() {
+    if (mounted) setState(() {});
   }
 
   void _initializeTts() {
@@ -106,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _flutterTts.stop();
     _controller.dispose();
     _pulseController.dispose();
-    _controller.removeListener(() {});
+    _controller.removeListener(_onTextChanged);
     super.dispose();
   }
 
@@ -141,10 +139,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     bool fromAudio = false,
     String? detectedLocale,
   }) async {
-    if (messageContent.trim().isEmpty) return;
-
     final contentToSend = messageContent.trim();
-    _controller.clear();
+    if (contentToSend.isEmpty) return;
+
+    if (!fromAudio) {
+      _controller.clear();
+    }
 
     _addMessage(
       chat.ChatMessage(
@@ -153,7 +153,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         name: "User",
       ),
     );
-
     _addMessage(
       chat.ChatMessage(
         role: chat.Role.iA,
