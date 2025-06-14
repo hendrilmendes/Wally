@@ -44,7 +44,7 @@ class UpdateService with ChangeNotifier {
     try {
       final response = await http.get(
         Uri.parse(
-          'https://api.github.com/repos/hendrilmendes/News-Droid/releases/latest',
+          'https://api.github.com/repos/hendrilmendes/Wally/releases/latest',
         ),
         headers: {'Accept': 'application/vnd.github.v3+json'},
       );
