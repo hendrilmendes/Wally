@@ -76,7 +76,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       final response = await http.get(
         Uri.https('wally-server.hendrilmendes2015.workers.dev', '/api'),
         headers: {
-          'Access-Control-Allow-Origin': '*',
           'Content-Type': 'application/json',
         },
       );
