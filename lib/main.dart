@@ -12,7 +12,7 @@ import 'package:projectx/l10n/app_localizations.dart';
 import 'package:projectx/screens/home/home.dart';
 import 'package:projectx/screens/login/login.dart';
 import 'package:projectx/theme/theme.dart';
-import 'package:projectx/updater/updater.dart';
+import 'package:projectx/service/updater.dart';
 import 'package:provider/provider.dart';
 import 'package:shorebird_code_push/shorebird_code_push.dart';
 
@@ -62,12 +62,25 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final AuthService authService = AuthService();
-  bool _updateChecked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<UpdateService>(
+        context,
+        listen: false,
+      ).silentCheckForUpdates();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => ThemeModel())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeModel()),
+        ChangeNotifierProvider(create: (_) => UpdateService()),
+      ],
       child: Consumer<ThemeModel>(
         builder: (_, themeModel, _) {
           return DynamicColorBuilder(
@@ -123,11 +136,6 @@ class _MyAppState extends State<MyApp> {
       future: authService.currentUser(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
-          if (!_updateChecked) {
-            _updateChecked = true;
-            Updater.checkUpdateApp(context);
-          }
-
           if (snapshot.hasData) {
             return const HomeScreen();
           } else {
