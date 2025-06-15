@@ -12,6 +12,7 @@
 
 - Modo Convidado para quem quiser uma conversa rápida
 - Novos modelos de IA (Google Gemini e Meta Llama)
+- Integração com o app Tá na Lista, suportando consultas de tarefas e anotações direto do Wally
 
 ### Correções
 

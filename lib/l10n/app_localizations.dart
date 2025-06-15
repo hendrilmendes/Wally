@@ -495,6 +495,60 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Fico feliz em ajudar, até a próxima :)'**
   String get hopeIHelped;
+
+  /// No description provided for @pendants.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pendentes'**
+  String get pendants;
+
+  /// No description provided for @completed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Concluídas'**
+  String get completed;
+
+  /// No description provided for @tasks.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tarefas'**
+  String get tasks;
+
+  /// No description provided for @notes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Anotações'**
+  String get notes;
+
+  /// No description provided for @noTask.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não há Tarefas'**
+  String get noTask;
+
+  /// No description provided for @noNotes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não há Anotações'**
+  String get noNotes;
+
+  /// No description provided for @logout.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desconectar'**
+  String get logout;
+
+  /// No description provided for @account.
+  ///
+  /// In pt, this message translates to:
+  /// **'Conta'**
+  String get account;
+
+  /// No description provided for @add.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar'**
+  String get add;
 }
 
 class _AppLocalizationsDelegate

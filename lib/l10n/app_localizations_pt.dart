@@ -217,4 +217,31 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get hopeIHelped => 'Fico feliz em ajudar, até a próxima :)';
+
+  @override
+  String get pendants => 'Pendentes';
+
+  @override
+  String get completed => 'Concluídas';
+
+  @override
+  String get tasks => 'Tarefas';
+
+  @override
+  String get notes => 'Anotações';
+
+  @override
+  String get noTask => 'Não há Tarefas';
+
+  @override
+  String get noNotes => 'Não há Anotações';
+
+  @override
+  String get logout => 'Desconectar';
+
+  @override
+  String get account => 'Conta';
+
+  @override
+  String get add => 'Adicionar';
 }

@@ -74,6 +74,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final themeModel = Provider.of<ThemeModel>(context);
+    final bool isGuest = _user?.isAnonymous ?? true;
 
     return Scaffold(
       body: Container(
@@ -109,32 +110,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                 ),
-                background: _buildUserInfoHeader(theme, _headerContentOpacity),
+                background: _buildHeaderBackground(
+                  theme,
+                  _headerContentOpacity,
+                ),
               ),
             ),
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  if (_user?.isAnonymous ?? true)
-                    Center(
-                      child: FilledButton.tonal(
-                        onPressed: () async {
-                          await AuthService().signOut();
-                          if (mounted) {
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    LoginScreen(authService: AuthService()),
-                              ),
-                              (route) => false,
-                            );
-                          }
-                        },
-                        child: Text(l10n.login),
-                      ),
-                    ),
+                  _buildSectionTitle(l10n.account, theme),
+                  _glassMorphicWrapper(
+                    child: isGuest
+                        ? _buildGuestAccountContent(theme)
+                        : _buildLoggedInAccountContent(theme),
+                  ),
+                  const SizedBox(height: 24),
+
                   _buildSectionTitle(l10n.appearance, theme),
                   _glassMorphicWrapper(
                     child: ThemeSettings(themeModel: themeModel),
@@ -157,86 +150,112 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildUserInfoHeader(ThemeData theme, double contentOpacity) {
-    final bool isGuest = _user?.isAnonymous ?? true;
-
-    return ClipRRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-        child: Container(
-          color: Colors.black.withOpacity(0.1),
+  Widget _buildHeaderBackground(ThemeData theme, double contentOpacity) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+            child: Container(color: Colors.black.withOpacity(0.1)),
+          ),
+        ),
+        Center(
           child: Opacity(
             opacity: contentOpacity,
-            child: isGuest
-                ? _buildGuestContent(theme)
-                : _buildLoggedInContent(theme),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLoggedInContent(ThemeData theme) {
-    final photoUrl = _user?.photoURL;
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const SizedBox(height: 16),
-        CircleAvatar(
-          radius: 40,
-          backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
-          child: (photoUrl != null && photoUrl.isNotEmpty)
-              ? ClipOval(
-                  child: CachedNetworkImage(
-                    imageUrl: photoUrl,
-                    fit: BoxFit.cover,
-                    width: 80,
-                    height: 80,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircleAvatar(
+                  radius: 40,
+                  backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
+                  child:
+                      (_user?.photoURL != null && _user!.photoURL!.isNotEmpty)
+                      ? ClipOval(
+                          child: CachedNetworkImage(
+                            imageUrl: _user.photoURL!,
+                            fit: BoxFit.cover,
+                            width: 80,
+                            height: 80,
+                          ),
+                        )
+                      : Icon(
+                          (_user?.isAnonymous ?? true)
+                              ? Icons.person_outline
+                              : Icons.person,
+                          size: 40,
+                          color: theme.colorScheme.primary,
+                        ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  (_user?.isAnonymous ?? true)
+                      ? AppLocalizations.of(context)!.guestMode
+                      : _user?.displayName ?? "Usuário",
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
                   ),
-                )
-              : Icon(Icons.person, size: 40, color: theme.colorScheme.primary),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          _user?.displayName ?? "Usuário",
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        Text(
-          _user?.email ?? "",
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                ),
+                if (!(_user?.isAnonymous ?? true))
+                  Text(
+                    _user?.email ?? "",
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildGuestContent(ThemeData theme) {
+  Widget _buildLoggedInAccountContent(ThemeData theme) {
     final l10n = AppLocalizations.of(context)!;
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        CircleAvatar(
-          radius: 40,
-          backgroundColor: theme.colorScheme.secondary.withOpacity(0.2),
-          child: Icon(
-            Icons.person_outline,
-            size: 45,
-            color: theme.colorScheme.onSecondaryContainer,
-          ),
+        ListTile(
+          leading: Icon(Icons.logout, color: theme.colorScheme.error),
+          title: Text(l10n.logout),
+          onTap: () async {
+            await AuthService().signOut();
+            if (mounted) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LoginScreen(authService: AuthService()),
+                ),
+                (route) => false,
+              );
+            }
+          },
         ),
-        const SizedBox(height: 12),
-        Text(
-          l10n.guestMode,
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-          ),
+      ],
+    );
+  }
+
+  Widget _buildGuestAccountContent(ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      children: [
+        ListTile(
+          leading: Icon(Icons.login, color: theme.colorScheme.primary),
+          title: Text(l10n.login),
+          onTap: () async {
+            await AuthService().signOut();
+            if (mounted) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LoginScreen(authService: AuthService()),
+                ),
+                (route) => false,
+              );
+            }
+          },
         ),
-        const SizedBox(height: 4),
       ],
     );
   }

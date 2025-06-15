@@ -41,53 +41,52 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyD_Os7D3m7niXE5xYr6ZOnSPDBkpQk5WEc',
-    appId: '1:1092048577683:web:041dfeb8aa08d299195966',
-    messagingSenderId: '1092048577683',
-    projectId: 'wally-95c84',
-    authDomain: 'wally-95c84.firebaseapp.com',
-    storageBucket: 'wally-95c84.firebasestorage.app',
-    measurementId: 'G-XK0RBJNDHL',
+    apiKey: 'AIzaSyDOLUarCGvoDbD6cMIHldznE8G_W442Ook',
+    appId: '1:68248536741:web:feebccc2c195f7b8dfaf4c',
+    messagingSenderId: '68248536741',
+    projectId: 'tarefas-app-66907',
+    authDomain: 'tarefas-app-66907.firebaseapp.com',
+    storageBucket: 'tarefas-app-66907.firebasestorage.app',
+    measurementId: 'G-Y80KCTRRLY',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBa_FQMMP0gnbuC9ZDvGlpdZEo2JPR3qa0',
-    appId: '1:1092048577683:android:3a02a99b31b56c2c195966',
-    messagingSenderId: '1092048577683',
-    projectId: 'wally-95c84',
-    storageBucket: 'wally-95c84.firebasestorage.app',
+    apiKey: 'AIzaSyDSWF-Il2JrCLJwdWL6oSdJVvaOAzupvz8',
+    appId: '1:68248536741:android:e4e0f749b9217319dfaf4c',
+    messagingSenderId: '68248536741',
+    projectId: 'tarefas-app-66907',
+    storageBucket: 'tarefas-app-66907.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCrQx-XiV9fgAuIbTfj1LcbV2VLxgfZ7Bs',
-    appId: '1:1092048577683:ios:4581a6cbb262dd81195966',
-    messagingSenderId: '1092048577683',
-    projectId: 'wally-95c84',
-    storageBucket: 'wally-95c84.firebasestorage.app',
-    androidClientId: '1092048577683-48n9im1530c1mcrr6ome0fbbp400k9u2.apps.googleusercontent.com',
-    iosClientId: '1092048577683-pelr7abo1f02gd9v6lr7r2gv0lag8vph.apps.googleusercontent.com',
+    apiKey: 'AIzaSyA9C2oBMS9YEn9s3do9XVu80JU7pRlLEBs',
+    appId: '1:68248536741:ios:ad84f21da18ec652dfaf4c',
+    messagingSenderId: '68248536741',
+    projectId: 'tarefas-app-66907',
+    storageBucket: 'tarefas-app-66907.firebasestorage.app',
+    androidClientId: '68248536741-g65qn8i99vlotlg0lgjqpkf09kveplhv.apps.googleusercontent.com',
+    iosClientId: '68248536741-tga4isq27n731ehgujr64g0tm84gdsqf.apps.googleusercontent.com',
     iosBundleId: 'com.github.hendrilmendes.projectx',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyCrQx-XiV9fgAuIbTfj1LcbV2VLxgfZ7Bs',
-    appId: '1:1092048577683:ios:893923392dfcd3eb195966',
-    messagingSenderId: '1092048577683',
-    projectId: 'wally-95c84',
-    storageBucket: 'wally-95c84.firebasestorage.app',
-    androidClientId: '1092048577683-48n9im1530c1mcrr6ome0fbbp400k9u2.apps.googleusercontent.com',
-    iosClientId: '1092048577683-kj06icml899kn3uc83h9f6g59a3jk76c.apps.googleusercontent.com',
-    iosBundleId: 'com.example.projectx',
+    apiKey: 'AIzaSyA9C2oBMS9YEn9s3do9XVu80JU7pRlLEBs',
+    appId: '1:68248536741:ios:ad84f21da18ec652dfaf4c',
+    messagingSenderId: '68248536741',
+    projectId: 'tarefas-app-66907',
+    storageBucket: 'tarefas-app-66907.firebasestorage.app',
+    androidClientId: '68248536741-g65qn8i99vlotlg0lgjqpkf09kveplhv.apps.googleusercontent.com',
+    iosClientId: '68248536741-tga4isq27n731ehgujr64g0tm84gdsqf.apps.googleusercontent.com',
+    iosBundleId: 'com.github.hendrilmendes.projectx',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyD_Os7D3m7niXE5xYr6ZOnSPDBkpQk5WEc',
-    appId: '1:1092048577683:web:558340e532380dae195966',
-    messagingSenderId: '1092048577683',
-    projectId: 'wally-95c84',
-    authDomain: 'wally-95c84.firebaseapp.com',
-    storageBucket: 'wally-95c84.firebasestorage.app',
-    measurementId: 'G-SJV7HDYD48',
+    apiKey: 'AIzaSyDOLUarCGvoDbD6cMIHldznE8G_W442Ook',
+    appId: '1:68248536741:web:b6a15165e7d65b1edfaf4c',
+    messagingSenderId: '68248536741',
+    projectId: 'tarefas-app-66907',
+    authDomain: 'tarefas-app-66907.firebaseapp.com',
+    storageBucket: 'tarefas-app-66907.firebasestorage.app',
+    measurementId: 'G-M5LW9LPTGB',
   );
-
 }

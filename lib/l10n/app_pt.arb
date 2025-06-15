@@ -139,5 +139,23 @@
         }
     },
     "hopeIHelped": "Fico feliz em ajudar, até a próxima :)",
-    "@hopeIHelped": {}
+    "@hopeIHelped": {},
+    "pendants": "Pendentes",
+    "@pendants": {},
+    "completed": "Concluídas",
+    "@completed": {},
+    "tasks": "Tarefas",
+    "@tasks": {},
+    "notes": "Anotações",
+    "@notes": {},
+    "noTask": "Não há Tarefas",
+    "@noTask": {},
+    "noNotes": "Não há Anotações",
+    "@noNotes": {},
+    "logout": "Desconectar",
+    "@logout": {},
+    "account": "Conta",
+    "@account": {},
+    "add": "Adicionar",
+    "@add": {}
 }

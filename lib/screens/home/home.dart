@@ -6,18 +6,20 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_language_id/google_mlkit_language_id.dart';
+import 'package:intl/intl.dart';
 import 'package:projectx/commands/commands.dart';
 import 'package:projectx/l10n/app_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:projectx/chat/chat.dart' as chat;
 import 'package:projectx/screens/newsdroid/news.dart';
 import 'package:projectx/screens/settings/settings.dart';
+import 'package:projectx/screens/tasks/tasks.dart';
 import 'package:projectx/screens/weather/weather.dart';
 import 'package:projectx/service/ia.dart';
+import 'package:projectx/service/tasks.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -44,6 +46,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
   String? _speakingMessageId;
+  final TasksService _tasksService = TasksService();
 
   @override
   void initState() {
@@ -145,7 +148,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     if (!fromAudio) {
       _controller.clear();
     }
-
     _addMessage(
       chat.ChatMessage(
         role: chat.Role.user,
@@ -167,7 +169,71 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     try {
       await _iaInitialized;
 
-      if (CommandHandler.shouldCheckWeather(contentToSend)) {
+      if (user?.isAnonymous ?? true) {
+        if (CommandHandler.isAddTaskCommand(contentToSend) ||
+            CommandHandler.isListTasksCommand(contentToSend)) {
+          _removeLoadingIndicator();
+          _addMessage(
+            chat.ChatMessage(
+              role: chat.Role.iA,
+              content:
+                  "Para usar a função de tarefas, você precisa fazer login com uma conta Google.",
+              name: 'Wally',
+            ),
+          );
+          return;
+        }
+      }
+
+      if (CommandHandler.isAddTaskCommand(contentToSend)) {
+        final taskDetails = CommandHandler.extractTaskDetails(contentToSend);
+        final taskTitle = taskDetails['title'];
+
+        if (taskTitle != null && taskTitle.isNotEmpty && user != null) {
+          final newTask = Task(
+            title: taskTitle,
+            userId: user!.uid,
+            note: taskDetails['note'],
+            dateTime: taskDetails['dateTime'],
+          );
+          await _tasksService.addItem(newTask);
+          _removeLoadingIndicator();
+
+          String confirmation = '✅ Tarefa "$taskTitle" adicionada!';
+          if (taskDetails['dateTime'] != null) {
+            confirmation +=
+                ' para ${DateFormat.yMd('pt_BR').format(taskDetails['dateTime']!)}';
+          }
+          _addMessage(
+            chat.ChatMessage(
+              role: chat.Role.iA,
+              content: confirmation,
+              name: 'Wally',
+            ),
+          );
+        } else {
+          _showError("Não consegui entender o nome da tarefa para adicionar.");
+        }
+      } else if (CommandHandler.isListTasksCommand(contentToSend)) {
+        if (user != null) {
+          final tasks = await _tasksService.getTasksStream(user!.uid).first;
+          _removeLoadingIndicator();
+          if (tasks.isEmpty) {
+            _addMessage(
+              chat.ChatMessage(
+                role: chat.Role.iA,
+                content:
+                    "Você não tem nenhuma tarefa pendente. Que tal adicionar uma?",
+                name: 'Wally',
+              ),
+            );
+          } else {
+            _addMessage(
+              chat.ChatMessage(role: chat.Role.iA, name: 'Wally', tasks: tasks),
+            );
+          }
+        }
+      } else if (CommandHandler.shouldCheckWeather(contentToSend)) {
         _navigateToWeather();
         _removeLoadingIndicator();
       } else if (CommandHandler.shouldCheckNews(contentToSend)) {
@@ -201,10 +267,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     bool fromAudio = false,
     required String locale,
   }) async {
-    const systemPrompt =
+    final systemPrompt =
         'Assuma a persona de Wally, um assistente de IA. Sua personalidade é: prestativa, otimista e com um toque de inteligência espirituosa. '
         'Sua principal missão é ajudar o usuário de forma rápida e eficiente. '
-        'Todas as respostas devem ser concisas, manter um tom amigável e encorajador.';
+        'Todas as respostas devem ser concisas, manter um tom amigável e encorajador. '
+        'IMPORTANTE: Responda estritamente no idioma correspondente ao seguinte código de localidade: $locale.';
 
     final localResponse = CommandHandler.handleSimpleResponse(message);
     String finalPrompt;
@@ -212,25 +279,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     if (localResponse != null) {
       modelToUse = AiModelType.fast;
-
-      final commandType = CommandHandler.getCommandType(message);
-      switch (commandType) {
-        case CommandType.time:
-          finalPrompt =
-              '$systemPrompt O usuário perguntou as horas. A hora atual é $localResponse. Elabore uma resposta amigável informando a hora.';
-          break;
-        case CommandType.date:
-          finalPrompt =
-              '$systemPrompt O usuário perguntou a data. A data de hoje é $localResponse. Crie uma resposta simpática informando a data.';
-          break;
-        default:
-          finalPrompt =
-              '$systemPrompt O usuário fez uma pergunta simples. A resposta direta é "$localResponse". Reformule essa resposta de uma maneira mais interessante e amigável.';
-      }
+      finalPrompt =
+          '$systemPrompt O usuário fez uma pergunta simples cuja resposta direta é "$localResponse". Reformule essa resposta de forma criativa e amigável.';
     } else {
       modelToUse = AiModelType.smart;
-      finalPrompt =
-          '$systemPrompt O usuário perguntou: "$message". Responda à pergunta dele.';
+      finalPrompt = '$systemPrompt O usuário perguntou: "$message".';
     }
 
     try {
@@ -261,13 +314,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     if (!_isListening) {
       bool available = await _speech.initialize(
         onStatus: (val) {
-          if (kDebugMode) print('onStatus: $val');
+          if (kDebugMode) print('[SpeechToText] onStatus: $val');
           if (mounted) setState(() => _isListening = _speech.isListening);
         },
         onError: (val) {
-          if (kDebugMode) print('onError: $val');
+          if (kDebugMode) print('[SpeechToText] onError: $val');
           if (mounted) setState(() => _isListening = false);
         },
+        debugLogging: kDebugMode,
       );
 
       if (available) {
@@ -279,16 +333,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               setState(() => _audioInput = val.recognizedWords);
 
               if (val.finalResult && _audioInput.isNotEmpty) {
-                final languageIdentifier = LanguageIdentifier(
-                  confidenceThreshold: 0.5,
-                );
-                final String locale = await languageIdentifier.identifyLanguage(
-                  _audioInput,
-                );
-                languageIdentifier.close();
+                String locale;
 
-                if (kDebugMode) {
-                  print('Idioma Detectado: $locale, Texto: $_audioInput');
+                if (kIsWeb) {
+                  var systemLocale = await _speech.systemLocale();
+                  locale = systemLocale?.localeId ?? 'pt-BR';
+                  if (kDebugMode) {
+                    print('[Web] Usando o idioma do sistema: $locale');
+                  }
+                } else {
+                  final languageIdentifier = LanguageIdentifier(
+                    confidenceThreshold: 0.5,
+                  );
+                  locale = await languageIdentifier.identifyLanguage(
+                    _audioInput,
+                  );
+                  languageIdentifier.close();
+                  if (kDebugMode) print('[Mobile] Idioma Detectado: $locale');
                 }
 
                 String processedInput = _preprocessSpeechInput(_audioInput);
@@ -305,7 +366,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           },
           listenFor: const Duration(seconds: 10),
           pauseFor: const Duration(seconds: 3),
+          onDevice: false,
         );
+      } else {
+        if (kDebugMode) {
+          print(
+            "[SpeechToText] O serviço de reconhecimento de voz não está disponível.",
+          );
+        }
+        if (mounted) setState(() => _isListening = false);
       }
     } else {
       if (mounted) setState(() => _isListening = false);
@@ -362,18 +431,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     context,
     MaterialPageRoute(builder: (context) => const WeatherScreen()),
   );
+
   void _navigateToNews() => Navigator.push(
     context,
     MaterialPageRoute(builder: (context) => const NewsApp()),
   );
-  void _navigateToTask() async {
-    const url =
-        'https://play.google.com/store/apps/details?id=com.github.hendrilmendes.tarefas';
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
-      _showError('Não foi possível abrir o link de tarefas.');
-    }
+
+  void _navigateToTask() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const TasksScreen()),
+    );
   }
 
   void _showError(String error) {
@@ -908,7 +976,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         children: [
                           Flexible(
                             child: Text(
-                              message.content,
+                              message.content ?? '',
                               style: TextStyle(
                                 color: textColor,
                                 fontSize: 16,

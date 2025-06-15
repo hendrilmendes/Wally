@@ -1,112 +1,189 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:projectx/service/tasks.dart';
 import 'package:uuid/uuid.dart';
+import 'dart:ui';
 
 class ChatMessage {
   final String id;
   final Role role;
-  final String content;
+  final String? content;
+  final List<Task>? tasks;
   final String name;
   final bool isLoading;
 
   ChatMessage({
     required this.role,
-    required this.content,
+    this.content,
+    this.tasks,
     required this.name,
     this.isLoading = false,
-  }): id = const Uuid().v4();
+  }) : id = const Uuid().v4(),
+       assert(
+         content != null || tasks != null,
+         'Message must have content or a list of tasks.',
+       ),
+       assert(
+         content == null || tasks == null,
+         'Message cannot have both content and tasks.',
+       );
 }
 
 enum Role { user, iA }
 
 class ChatBubble extends StatelessWidget {
-  final Role role;
-  final String content;
-  final Widget photo;
-  final bool isLoading;
+  final ChatMessage message;
 
-  const ChatBubble({
-    super.key,
-    required this.role,
-    required this.content,
-    required this.photo,
-    this.isLoading = false,
-  });
+  const ChatBubble({super.key, required this.message});
 
   @override
   Widget build(BuildContext context) {
-    final isUser = role == Role.user;
+    if (message.tasks != null) {
+      return _TasksListBubble(tasks: message.tasks!);
+    }
+
+    final theme = Theme.of(context);
+    final isUser = message.role == Role.user;
     final alignment = isUser
         ? CrossAxisAlignment.end
         : CrossAxisAlignment.start;
-    final mainAxisAlignment = isUser
-        ? MainAxisAlignment.end
-        : MainAxisAlignment.start;
-    final bubbleColor = isUser ? Colors.blueAccent : Colors.white;
-    final textColor = isUser ? Colors.white : Colors.black87;
-    final borderRadius = BorderRadius.only(
-      topLeft: const Radius.circular(20),
-      topRight: const Radius.circular(20),
-      bottomLeft: isUser ? const Radius.circular(20) : const Radius.circular(4),
-      bottomRight: isUser
-          ? const Radius.circular(4)
-          : const Radius.circular(20),
-    );
+    final bubbleColor = isUser
+        ? theme.colorScheme.primary
+        : theme.colorScheme.surface.withOpacity(0.5);
+    final textColor = isUser
+        ? theme.colorScheme.onPrimary
+        : theme.colorScheme.onSurface;
+    final borderRadius = isUser
+        ? const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+            bottomLeft: Radius.circular(20),
+            bottomRight: Radius.circular(4),
+          )
+        : const BorderRadius.only(
+            topLeft: Radius.circular(4),
+            topRight: Radius.circular(20),
+            bottomLeft: Radius.circular(20),
+            bottomRight: Radius.circular(20),
+          );
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
       child: Column(
         crossAxisAlignment: alignment,
         children: [
-          Row(
-            mainAxisAlignment: mainAxisAlignment,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              if (!isUser) ...[
-                CircleAvatar(
-                  radius: 20,
-                  backgroundColor: Colors.grey[200],
-                  child: photo,
+          ClipRRect(
+            borderRadius: borderRadius,
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+              enabled: !isUser,
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.75,
                 ),
-                const SizedBox(width: 10),
-              ],
-              Flexible(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: bubbleColor,
-                    borderRadius: borderRadius,
-                    boxShadow: [
-                      BoxShadow(
-                        // ignore: deprecated_member_use
-                        color: Colors.black.withOpacity(0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 14,
-                    horizontal: 18,
-                  ),
-                  child: isLoading
-                      ? const SpinKitThreeBounce(color: Colors.blue, size: 24.0)
-                      : Text(
-                          content,
-                          style: TextStyle(color: textColor, fontSize: 16),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 16,
+                ),
+                decoration: BoxDecoration(
+                  color: bubbleColor,
+                  borderRadius: borderRadius,
+                  border: !isUser
+                      ? Border.all(color: Colors.white.withOpacity(0.2))
+                      : null,
+                ),
+                child: message.isLoading
+                    ? SpinKitThreeBounce(color: textColor, size: 18)
+                    : Text(
+                        message.content ?? '',
+                        style: TextStyle(
+                          color: textColor,
+                          fontSize: 16,
+                          height: 1.4,
                         ),
-                ),
+                      ),
               ),
-              if (isUser) ...[
-                const SizedBox(width: 10),
-                CircleAvatar(
-                  radius: 20,
-                  backgroundColor: Colors.blue[100],
-                  child: photo,
-                ),
-              ],
-            ],
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _TasksListBubble extends StatelessWidget {
+  final List<Task> tasks;
+
+  const _TasksListBubble({required this.tasks});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.8,
+            ),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceVariant.withOpacity(0.4),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withOpacity(0.2)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Suas Tarefas Pendentes",
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Divider(height: 24),
+                ListView.builder(
+                  itemCount: tasks.length,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemBuilder: (context, index) {
+                    final task = tasks[index];
+                    return CheckboxListTile(
+                      title: Text(
+                        task.title,
+                        style: TextStyle(
+                          decoration: task.isCompleted
+                              ? TextDecoration.lineThrough
+                              : TextDecoration.none,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      subtitle: task.note != null
+                          ? Text(
+                              task.note!,
+                              style: TextStyle(
+                                color: theme.colorScheme.onSurface.withOpacity(
+                                  0.7,
+                                ),
+                              ),
+                            )
+                          : null,
+                      value: task.isCompleted,
+                      onChanged: (bool? value) {},
+                      activeColor: theme.colorScheme.primary,
+                      controlAffinity: ListTileControlAffinity.leading,
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

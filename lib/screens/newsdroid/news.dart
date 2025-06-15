@@ -182,13 +182,6 @@ class _NewsAppState extends State<NewsApp> {
     final remainingPosts = posts.length > 3 ? posts.sublist(3) : [];
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: Text(l10n.newsdroidApp),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [_buildDownloadButton(l10n, theme), const SizedBox(width: 8)],
-      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -213,19 +206,33 @@ class _NewsAppState extends State<NewsApp> {
                     parent: AlwaysScrollableScrollPhysics(),
                   ),
                   slivers: [
+                    SliverAppBar(
+                      title: Text(l10n.newsdroidApp),
+                      elevation: 0,
+                      pinned: true,
+                      floating: true,
+                      snap: true,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.surface.withOpacity(0.7),
+                      flexibleSpace: ClipRRect(
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                          child: Container(color: Colors.transparent),
+                        ),
+                      ),
+                      actions: [
+                        _buildDownloadButton(l10n, theme),
+                        const SizedBox(width: 8),
+                      ],
+                    ),
                     SliverToBoxAdapter(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(
-                            height:
-                                kToolbarHeight +
-                                MediaQuery.of(context).padding.top +
-                                16,
-                          ),
                           if (featuredPosts.isNotEmpty)
                             _buildFeaturedCarousel(featuredPosts, theme),
-                          SizedBox(height: 16),
+                          const SizedBox(height: 16),
                         ],
                       ),
                     ),
