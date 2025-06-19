@@ -195,6 +195,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             userId: user!.uid,
             note: taskDetails['note'],
             dateTime: taskDetails['dateTime'],
+            isCompleted: false
           );
           await _tasksService.addItem(newTask);
           _removeLoadingIndicator();

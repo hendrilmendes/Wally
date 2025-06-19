@@ -28,9 +28,9 @@ class Task {
       title: data['title'] ?? '',
       note: data['note'],
       dateTime: (data['dateTime'] as Timestamp?)?.toDate(),
-      isCompleted: data['completed'] ?? false,
+      isCompleted: data['isCompleted'] ?? false,
       userId: data['userId'] ?? '',
-      isNote: data['isNote'] ?? false, // Lê o novo campo
+      isNote: data['isNote'] ?? false,
       createdAt: data['createdAt'] as Timestamp?,
     );
   }
@@ -75,7 +75,7 @@ class TasksService {
 
   Future<void> toggleItemCompletion(String itemId, bool currentStatus) async {
     await _db.collection(_collectionPath).doc(itemId).update({
-      'completed': !currentStatus,
+      'isCompleted': !currentStatus,
     });
   }
 
@@ -109,6 +109,6 @@ class TasksService {
       await _db.collection(_collectionPath).doc(itemId).delete();
   Future<void> toggleTaskCompletion(String itemId, bool currentStatus) async =>
       await _db.collection(_collectionPath).doc(itemId).update({
-        'completed': !currentStatus,
+        'isCompleted': !currentStatus,
       });
 }
