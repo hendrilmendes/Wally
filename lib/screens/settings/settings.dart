@@ -12,7 +12,6 @@ import 'package:projectx/screens/login/login.dart';
 import 'package:projectx/theme/theme.dart';
 import 'package:projectx/widgets/settings/about.dart';
 import 'package:projectx/widgets/settings/dynamic_colors.dart';
-import 'package:projectx/widgets/settings/review.dart';
 import 'package:projectx/widgets/settings/support.dart';
 import 'package:projectx/widgets/settings/theme.dart';
 import 'package:provider/provider.dart';
@@ -136,7 +135,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _glassMorphicWrapper(child: const DynamicColorsSettings()),
                   const SizedBox(height: 24),
                   _buildSectionTitle(l10n.supportAndFeedback, theme),
-                  _glassMorphicWrapper(child: buildReviewSettings(context)),
                   _glassMorphicWrapper(child: buildSupportSettings(context)),
                   const SizedBox(height: 24),
                   _buildSectionTitle(l10n.about, theme),

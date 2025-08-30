@@ -1,17 +1,21 @@
 // ignore_for_file: deprecated_member_use
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_mlkit_language_id/google_mlkit_language_id.dart';
 import 'package:intl/intl.dart';
 import 'package:projectx/commands/commands.dart';
 import 'package:projectx/l10n/app_localizations.dart';
 import 'package:http/http.dart' as http;
-import 'package:projectx/chat/chat.dart' as chat;
-import 'package:projectx/screens/newsdroid/news.dart';
+import 'package:projectx/model/chat.dart' as chat;
+import 'package:projectx/screens/news/news.dart';
 import 'package:projectx/screens/settings/settings.dart';
 import 'package:projectx/screens/tasks/tasks.dart';
 import 'package:projectx/screens/weather/weather.dart';
@@ -42,11 +46,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   String aiApiKey = '';
   late AIService _aiService;
   late final User? user;
-  int _desktopNavIndex = 0;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
   String? _speakingMessageId;
   final TasksService _tasksService = TasksService();
+  final Set<String> _fullyDisplayedMessages = {};
+   final FocusNode _desktopInputFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -108,6 +113,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _controller.dispose();
     _pulseController.dispose();
     _controller.removeListener(_onTextChanged);
+     _desktopInputFocusNode.dispose();
     super.dispose();
   }
 
@@ -125,13 +131,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         setState(() {
-          _messages.add(
-            chat.ChatMessage(
-              role: chat.Role.iA,
-              content: AppLocalizations.of(context)!.wallyWelcome,
-              name: 'Wally',
-            ),
+          final welcomeMessage = chat.ChatMessage(
+            role: chat.Role.iA,
+            content: AppLocalizations.of(context)!.wallyWelcome,
+            name: 'Wally',
           );
+          _messages.add(welcomeMessage);
+          _fullyDisplayedMessages.add(welcomeMessage.id);
         });
       }
     });
@@ -141,24 +147,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     String messageContent, {
     bool fromAudio = false,
     String? detectedLocale,
+    bool isRegenerating = false,
   }) async {
     final contentToSend = messageContent.trim();
     if (contentToSend.isEmpty) return;
 
-    if (!fromAudio) {
+    if (!fromAudio && !isRegenerating) {
       _controller.clear();
+      _addMessage(
+        chat.ChatMessage(
+          role: chat.Role.user,
+          content: contentToSend,
+          name: "User",
+        ),
+      );
     }
-    _addMessage(
-      chat.ChatMessage(
-        role: chat.Role.user,
-        content: contentToSend,
-        name: "User",
-      ),
-    );
+
     _addMessage(
       chat.ChatMessage(
         role: chat.Role.iA,
-        content: '...',
+        content: '',
         name: 'Wally',
         isLoading: true,
       ),
@@ -195,7 +203,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             userId: user!.uid,
             note: taskDetails['note'],
             dateTime: taskDetails['dateTime'],
-            isCompleted: false
+            isCompleted: false,
           );
           await _tasksService.addItem(newTask);
           _removeLoadingIndicator();
@@ -272,6 +280,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         'Assuma a persona de Wally, um assistente de IA. Sua personalidade é: prestativa, otimista e com um toque de inteligência espirituosa. '
         'Sua principal missão é ajudar o usuário de forma rápida e eficiente. '
         'Todas as respostas devem ser concisas, manter um tom amigável e encorajador. '
+        'Formate suas respostas usando Markdown quando apropriado (listas, negrito, itálico). '
         'IMPORTANTE: Responda estritamente no idioma correspondente ao seguinte código de localidade: $locale.';
 
     final localResponse = CommandHandler.handleSimpleResponse(message);
@@ -309,6 +318,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     } catch (e) {
       _showError(e.toString());
     }
+  }
+
+  Future<void> _regenerateResponse(int messageIndex) async {
+    if (messageIndex < 0 || messageIndex + 1 >= _messages.length) return;
+
+    final userPrompt = _messages[messageIndex + 1].content;
+    if (userPrompt == null || userPrompt.isEmpty) return;
+
+    if (mounted) {
+      final oldMessage = _messages.removeAt(messageIndex);
+      _listKey.currentState?.removeItem(
+        messageIndex,
+        (context, animation) =>
+            _buildMessageBubble(oldMessage, animation: animation),
+      );
+    }
+
+    await _sendMessage(userPrompt, isRegenerating: true);
   }
 
   Future<void> _listen() async {
@@ -491,6 +518,46 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Row(
+          children: [
+            Image.asset(_iaPhoto, width: 40, height: 40),
+            const SizedBox(width: 12),
+            Text(l10n.appName),
+          ],
+        ),
+        actions: [
+          TextButton.icon(
+            onPressed: _navigateToWeather,
+            icon: const Icon(Icons.wb_sunny_outlined),
+            label: Text(l10n.weather),
+          ),
+          const SizedBox(width: 8),
+          TextButton.icon(
+            onPressed: _navigateToNews,
+            icon: const Icon(Icons.article_outlined),
+            label: Text(l10n.newsdroidApp),
+          ),
+          const SizedBox(width: 8),
+          TextButton.icon(
+            onPressed: _navigateToTask,
+            icon: const Icon(Icons.task_alt_outlined),
+            label: Text(l10n.tarefasApp),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            tooltip: l10n.settings,
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SettingsScreen()),
+            ),
+            icon: const Icon(Icons.settings_outlined),
+          ),
+          const SizedBox(width: 16),
+        ],
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -502,108 +569,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ],
           ),
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 90,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface.withOpacity(0.3),
-                border: Border(
-                  right: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+        child: Center(
+          child: Column(
+            children: [
+              Expanded(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 800),
+                  child: _messages.length <= 1
+                      ? _buildInitialSuggestions()
+                      : _buildMessageList(),
                 ),
               ),
-              child: NavigationRail(
-                selectedIndex: _desktopNavIndex,
-                onDestinationSelected: (int index) {
-                  setState(() => _desktopNavIndex = index);
-                  switch (index) {
-                    case 1:
-                      _navigateToWeather();
-                      break;
-                    case 2:
-                      _navigateToNews();
-                      break;
-                    case 3:
-                      _navigateToTask();
-                      break;
-                    case 4:
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SettingsScreen(),
-                        ),
-                      );
-                      break;
-                  }
-                  Future.delayed(const Duration(milliseconds: 500), () {
-                    if (mounted) setState(() => _desktopNavIndex = 0);
-                  });
-                },
-                leading: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Image.asset(_iaPhoto, width: 80, height: 80),
-                ),
-                backgroundColor: Colors.transparent,
-                indicatorColor: theme.colorScheme.primary.withOpacity(0.2),
-                labelType: NavigationRailLabelType.selected,
-                destinations: [
-                  NavigationRailDestination(
-                    icon: const Icon(Icons.chat_bubble_outline_rounded),
-                    selectedIcon: Icon(
-                      Icons.chat_bubble_rounded,
-                      color: theme.colorScheme.primary,
-                    ),
-                    label: Text(l10n.chat),
-                  ),
-                  NavigationRailDestination(
-                    icon: const Icon(Icons.wb_sunny_outlined),
-                    label: Text(l10n.weather),
-                  ),
-                  NavigationRailDestination(
-                    icon: const Icon(Icons.article_outlined),
-                    label: Text(l10n.news),
-                  ),
-                  NavigationRailDestination(
-                    icon: const Icon(Icons.task_alt_outlined),
-                    label: Text(l10n.tarefasApp),
-                  ),
-                  NavigationRailDestination(
-                    icon: const Icon(Icons.settings_outlined),
-                    label: Text(l10n.settings),
-                  ),
-                ],
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 800),
+                child: _buildDesktopInputField(),
               ),
-            ),
-            Expanded(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      children: [
-                        Text(l10n.appName, style: theme.textTheme.titleLarge),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  Expanded(
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 720),
-                        child: _buildMessageList(),
-                      ),
-                    ),
-                  ),
-                  Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 720),
-                      child: _buildDesktopInputField(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -615,7 +597,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final bool canSend = _controller.text.isNotEmpty;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 20),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       child: Material(
         elevation: 2,
         borderRadius: BorderRadius.circular(28.0),
@@ -733,7 +715,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ),
         child: Column(
           children: [
-            Expanded(child: _buildMessageList()),
+            Expanded(
+              child: _messages.length <= 1
+                  ? _buildInitialSuggestions()
+                  : _buildMessageList(),
+            ),
             const Divider(height: 1),
             _buildBottomActionArea(),
           ],
@@ -785,7 +771,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           )
                         : Icon(
                             Icons.mic_none,
-                            key: ValueKey('mic'),
+                            key: const ValueKey('mic'),
                             color: theme.colorScheme.onPrimary,
                             size: 40,
                           ),
@@ -794,7 +780,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             ),
           ),
-          // Botão de sugestões
           IconButton(
             icon: Icon(
               Icons.explore_outlined,
@@ -803,6 +788,104 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             onPressed: _showSuggestionSheet,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildInitialSuggestions() {
+    final l10n = AppLocalizations.of(context)!;
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildSuggestionCard(
+              icon: Icons.wb_sunny_outlined,
+              title: "Previsão do Tempo",
+              subtitle: "Veja como está o clima agora",
+              onTap: () => _sendMessage(l10n.weather),
+            ),
+            _buildSuggestionCard(
+              icon: Icons.article_outlined,
+              title: "Últimas Notícias",
+              subtitle: "Fique por dentro dos acontecimentos",
+              onTap: () => _sendMessage(l10n.news),
+            ),
+            _buildSuggestionCard(
+              icon: Icons.task_alt_outlined,
+              title: "Minhas Tarefas",
+              subtitle: "Ver ou adicionar novas tarefas",
+              onTap: () => _sendMessage(l10n.tarefasApp),
+            ),
+            _buildSuggestionCard(
+              icon: Icons.lightbulb_outline,
+              title: "Me dê uma ideia",
+              subtitle: "Sugestão para um projeto em Flutter",
+              onTap: () => _sendMessage(
+                "Me dê uma ideia de um projeto simples em Flutter",
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSuggestionCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    return Card(
+      elevation: 0,
+      color: theme.colorScheme.onSurface.withOpacity(0.05),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: theme.colorScheme.onSurface.withOpacity(0.1)),
+      ),
+      margin: const EdgeInsets.only(bottom: 16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Icon(icon, color: theme.colorScheme.primary, size: 28),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.textTheme.bodyMedium?.color?.withOpacity(
+                          0.7,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 16,
+                color: theme.colorScheme.onSurface.withOpacity(0.5),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -846,7 +929,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     },
                   ),
                   _buildGlassmorphicChip(
-                    icon: Icons.task_outlined,
+                    icon: Icons.task_alt_outlined,
                     label: AppLocalizations.of(context)!.tarefasApp,
                     onPressed: () {
                       Navigator.pop(context);
@@ -903,21 +986,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       initialItemCount: _messages.length,
       itemBuilder: (context, index, animation) {
         final message = _messages[index];
-        return SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.5),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
-          child: FadeTransition(
-            opacity: animation,
-            child: _buildMessageBubble(message),
-          ),
-        );
+        return _buildMessageBubble(message, index: index, animation: animation);
       },
     );
   }
 
-  Widget _buildMessageBubble(chat.ChatMessage message) {
+  Widget _buildMessageBubble(
+    chat.ChatMessage message, {
+    int? index,
+    Animation<double>? animation,
+  }) {
     final isUser = message.role == chat.Role.user;
     final theme = Theme.of(context);
     final bool isSpeaking = message.id == _speakingMessageId;
@@ -925,7 +1003,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final alignment = isUser
         ? CrossAxisAlignment.end
         : CrossAxisAlignment.start;
-    final color = isUser
+    final bubbleColor = isUser
         ? theme.colorScheme.primary
         : theme.colorScheme.surface.withOpacity(0.5);
     final textColor = isUser
@@ -945,61 +1023,141 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             bottomRight: Radius.circular(20),
           );
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: alignment,
-        children: [
-          ClipRRect(
-            borderRadius: borderRadius,
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-              enabled: !isUser,
-              child: Container(
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 0.75,
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: borderRadius,
-                  border: !isUser
-                      ? Border.all(color: Colors.white.withOpacity(0.2))
-                      : null,
-                ),
-                child: message.isLoading
-                    ? SpinKitThreeBounce(color: textColor, size: 18)
-                    : Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              message.content ?? '',
-                              style: TextStyle(
-                                color: textColor,
-                                fontSize: 16,
-                                height: 1.4,
-                              ),
-                            ),
-                          ),
-                          if (isSpeaking)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 8.0),
-                              child: SpinKitWave(
-                                color: textColor,
-                                size: 18.0,
-                                type: SpinKitWaveType.start,
-                              ),
-                            ),
-                        ],
+    final messageContent = Container(
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.of(context).size.width * 0.75,
+      ),
+      decoration: BoxDecoration(
+        color: bubbleColor,
+        borderRadius: borderRadius,
+        border: !isUser
+            ? Border.all(color: Colors.white.withOpacity(0.2))
+            : null,
+      ),
+      child: ClipRRect(
+        borderRadius: borderRadius,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          enabled: !isUser,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: message.isLoading
+                ? SpinKitThreeBounce(color: textColor, size: 18)
+                : (_fullyDisplayedMessages.contains(message.id) || isUser)
+                ? MarkdownBody(
+                    data: message.content ?? '',
+                    styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
+                      p: theme.textTheme.bodyLarge?.copyWith(color: textColor),
+                      listBullet: theme.textTheme.bodyLarge?.copyWith(
+                        color: textColor,
                       ),
-              ),
+                      // Adicione outros estilos conforme necessário
+                    ),
+                  )
+                : AnimatedTextKit(
+                    animatedTexts: [
+                      TypewriterAnimatedText(
+                        message.content ?? '',
+                        textStyle: theme.textTheme.bodyLarge?.copyWith(
+                          color: textColor,
+                        ),
+                        speed: const Duration(milliseconds: 30),
+                      ),
+                    ],
+                    totalRepeatCount: 1,
+                    pause: const Duration(milliseconds: 1000),
+                    displayFullTextOnTap: true,
+                    stopPauseOnTap: true,
+                    onFinished: () {
+                      if (mounted) {
+                        setState(() {
+                          _fullyDisplayedMessages.add(message.id);
+                        });
+                      }
+                    },
+                  ),
+          ),
+        ),
+      ),
+    );
+
+    final bubble = Column(
+      crossAxisAlignment: alignment,
+      children: [
+        messageContent,
+        if (!isUser &&
+            !message.isLoading &&
+            _fullyDisplayedMessages.contains(message.id))
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0, right: 8.0, left: 8.0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildActionButton(
+                  icon: Icons.copy_all_outlined,
+                  onPressed: () {
+                    Clipboard.setData(
+                      ClipboardData(text: message.content ?? ''),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Copiado para a área de transferência!"),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                ),
+                _buildActionButton(
+                  icon: isSpeaking
+                      ? Icons.volume_up_rounded
+                      : Icons.volume_up_outlined,
+                  onPressed: () =>
+                      _speak(message.content ?? '', 'pt-BR', message.id),
+                ),
+                if (index != null)
+                  _buildActionButton(
+                    icon: Icons.refresh_rounded,
+                    onPressed: () => _regenerateResponse(index),
+                  ),
+              ],
             ),
           ),
-        ],
+      ],
+    );
+
+    Widget animatedBubble = animation != null
+        ? SlideTransition(
+            position:
+                Tween<Offset>(
+                  begin: const Offset(0, 0.5),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(parent: animation, curve: Curves.easeOut),
+                ),
+            child: FadeTransition(opacity: animation, child: bubble),
+          )
+        : bubble;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: animatedBubble,
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    final theme = Theme.of(context);
+    return SizedBox(
+      width: 36,
+      height: 36,
+      child: IconButton(
+        icon: Icon(icon),
+        iconSize: 20,
+        color: theme.colorScheme.onSurface.withOpacity(0.6),
+        onPressed: onPressed,
+        splashRadius: 20,
       ),
     );
   }
@@ -1108,7 +1266,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
               const SizedBox(height: 32),
-
               Text(
                 l10n.appName,
                 style: theme.textTheme.displaySmall?.copyWith(
@@ -1116,7 +1273,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
               const SizedBox(height: 12),
-
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 500),
                 transitionBuilder: (child, animation) {
@@ -1131,7 +1287,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
               const SizedBox(height: 40),
-
               SizedBox(
                 width: 24,
                 height: 24,

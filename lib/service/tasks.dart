@@ -42,7 +42,7 @@ class Task {
       'completed': isCompleted,
       'userId': userId,
       'dateTime': dateTime != null ? Timestamp.fromDate(dateTime!) : null,
-      'isNote': isNote, // Salva o novo campo
+      'isNote': isNote,
       'createdAt': createdAt ?? FieldValue.serverTimestamp(),
     };
   }

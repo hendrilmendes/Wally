@@ -1,11 +1,9 @@
 import 'package:dynamic_color/dynamic_color.dart';
-import 'package:feedback/feedback.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart'; // Necessário para kIsWeb
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:projectx/auth/auth.dart';
 import 'package:projectx/firebase_options.dart';
@@ -16,6 +14,7 @@ import 'package:projectx/service/updater.dart';
 import 'package:projectx/theme/theme.dart';
 import 'package:provider/provider.dart';
 import 'package:shorebird_code_push/shorebird_code_push.dart';
+import 'package:wiredash/wiredash.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,17 +35,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => ThemeModel()),
         ChangeNotifierProvider(create: (_) => UpdateService()),
       ],
-      child: BetterFeedback(
-        theme: FeedbackThemeData.light(),
-        darkTheme: FeedbackThemeData.dark(),
-        localizationsDelegates: [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalFeedbackLocalizationsDelegate(),
-        ],
-        child: const MyApp(),
-      ),
+      child: const MyApp(),
     ),
   );
 }
@@ -94,31 +83,35 @@ class _MyAppState extends State<MyApp> {
               lightColorScheme = null;
               darkColorScheme = null;
             }
-            return MaterialApp(
-              theme: ThemeData(
-                brightness: Brightness.light,
-                colorScheme: lightColorScheme,
-                useMaterial3: true,
-                textTheme: Typography().black.apply(
-                  fontFamily: GoogleFonts.openSans().fontFamily,
+            return Wiredash(
+              projectId: 'wally-hqanz45',
+              secret: 'RXIF1RTjF1cWsjHFm3dpdiI4uE2qAm02',
+              child: MaterialApp(
+                theme: ThemeData(
+                  brightness: Brightness.light,
+                  colorScheme: lightColorScheme,
+                  useMaterial3: true,
+                  textTheme: Typography().black.apply(
+                    fontFamily: GoogleFonts.openSans().fontFamily,
+                  ),
                 ),
-              ),
-              darkTheme: ThemeData(
-                brightness: Brightness.dark,
-                colorScheme: darkColorScheme,
-                useMaterial3: true,
-                textTheme: Typography().white.apply(
-                  fontFamily: GoogleFonts.openSans().fontFamily,
+                darkTheme: ThemeData(
+                  brightness: Brightness.dark,
+                  colorScheme: darkColorScheme,
+                  useMaterial3: true,
+                  textTheme: Typography().white.apply(
+                    fontFamily: GoogleFonts.openSans().fontFamily,
+                  ),
                 ),
+                themeMode: _getThemeMode(themeModel.themeMode),
+                debugShowCheckedModeBanner: false,
+                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                home: _buildHome(context),
+                routes: {
+                  '/login': (context) => LoginScreen(authService: authService),
+                },
               ),
-              themeMode: _getThemeMode(themeModel.themeMode),
-              debugShowCheckedModeBanner: false,
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              home: _buildHome(context),
-              routes: {
-                '/login': (context) => LoginScreen(authService: authService),
-              },
             );
           },
         );

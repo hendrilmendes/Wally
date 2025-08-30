@@ -2,7 +2,7 @@
 
 ======================================================
 
-## [2.0.0] (Em desenvolvimento)
+## [2.0.1]
 
 ## Alterações
 
@@ -11,7 +11,7 @@
 ### Features
 
 - Modo Convidado para quem quiser uma conversa rápida
-- Novos modelos de IA (Google Gemini e Meta Llama)
+- Novos modelos de IA (Google Gemini e DeepSeek)
 - Integração com o app Tá na Lista, suportando consultas de tarefas e anotações direto do Wally
 
 ### Correções
@@ -50,5 +50,4 @@
 - Nova interface
 - Menu de ajustes
 - Integração com api de Clima
-- O assistente agora e capaz de abrir alguns apps populares
 - Integração de conteúdo News-Droid

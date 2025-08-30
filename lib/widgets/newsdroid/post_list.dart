@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:projectx/screens/newsdroid/posts/posts_details.dart';
+import 'package:projectx/screens/news/posts/posts_details.dart';
 import 'package:shimmer/shimmer.dart';
 
 class PostListWidget extends StatefulWidget {
@@ -42,16 +42,15 @@ class _PostListWidgetState extends State<PostListWidget> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder:
-            (context) => PostDetailsScreen(
-              title: title,
-              imageUrl: imageUrl,
-              content: content,
-              url: url,
-              formattedDate: formattedDate,
-              blogId: blogId,
-              postId: postId,
-            ),
+        builder: (context) => PostDetailsScreen(
+          title: title,
+          imageUrl: imageUrl,
+          content: content,
+          url: url,
+          formattedDate: formattedDate,
+          blogId: blogId,
+          postId: postId,
+        ),
       ),
     );
   }
@@ -63,10 +62,9 @@ class _PostListWidgetState extends State<PostListWidget> {
     final publishedDate = post['published'] ?? '';
     final formattedDate = widget.formatDate(publishedDate);
 
-    var imageUrl =
-        post['images']?.isNotEmpty == true
-            ? post['images']![0]['url'] ?? ''
-            : '';
+    var imageUrl = post['images']?.isNotEmpty == true
+        ? post['images']![0]['url'] ?? ''
+        : '';
 
     if (imageUrl.isEmpty) {
       final content = post['content'] ?? '';
@@ -93,10 +91,9 @@ class _PostListWidgetState extends State<PostListWidget> {
     final publishedDate = post['published'] ?? '';
     final formattedDate = widget.formatDate(publishedDate);
 
-    var imageUrl =
-        post['images']?.isNotEmpty == true
-            ? post['images']![0]['url'] ?? ''
-            : '';
+    var imageUrl = post['images']?.isNotEmpty == true
+        ? post['images']![0]['url'] ?? ''
+        : '';
 
     if (imageUrl.isEmpty) {
       final content = post['content'] ?? '';
@@ -109,17 +106,16 @@ class _PostListWidgetState extends State<PostListWidget> {
       clipBehavior: Clip.hardEdge,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
       child: InkWell(
-        onTap:
-            () => _imageTapped(
-              context,
-              title,
-              imageUrl,
-              url,
-              post['content'] ?? '',
-              formattedDate,
-              post['blog']['id'] ?? '',
-              post['id'] ?? '',
-            ),
+        onTap: () => _imageTapped(
+          context,
+          title,
+          imageUrl,
+          url,
+          post['content'] ?? '',
+          formattedDate,
+          post['blog']['id'] ?? '',
+          post['id'] ?? '',
+        ),
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
@@ -129,26 +125,23 @@ class _PostListWidgetState extends State<PostListWidget> {
                 child: SizedBox(
                   width: 100,
                   height: 100,
-                  child:
-                      imageUrl.isNotEmpty
-                          ? CachedNetworkImage(
-                            imageUrl: imageUrl,
-                            fit: BoxFit.cover,
-                            placeholder:
-                                (context, url) => Shimmer.fromColors(
-                                  baseColor: Colors.grey[300]!,
-                                  highlightColor: Colors.grey[100]!,
-                                  child: Container(color: Colors.white),
-                                ),
-                            errorWidget:
-                                (context, url, error) =>
-                                    const Icon(Icons.error_outline),
-                          )
-                          : Shimmer.fromColors(
+                  child: imageUrl.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: imageUrl,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Shimmer.fromColors(
                             baseColor: Colors.grey[300]!,
                             highlightColor: Colors.grey[100]!,
                             child: Container(color: Colors.white),
                           ),
+                          errorWidget: (context, url, error) =>
+                              const Icon(Icons.error_outline),
+                        )
+                      : Shimmer.fromColors(
+                          baseColor: Colors.grey[300]!,
+                          highlightColor: Colors.grey[100]!,
+                          child: Container(color: Colors.white),
+                        ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -175,11 +168,10 @@ class _PostListWidgetState extends State<PostListWidget> {
                         const SizedBox(width: 4),
                         Text(
                           formattedDate,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                         ),
                       ],
                     ),
@@ -207,20 +199,18 @@ class _PostListWidgetState extends State<PostListWidget> {
               child: PageView.builder(
                 controller: widget.pageController,
                 onPageChanged: widget.onPageChanged,
-                itemCount:
-                    widget.filteredPosts.length >= 3
-                        ? 3
-                        : widget.filteredPosts.length,
+                itemCount: widget.filteredPosts.length >= 3
+                    ? 3
+                    : widget.filteredPosts.length,
                 itemBuilder: (context, index) {
                   final post = widget.filteredPosts[index];
                   final title = post['title'] ?? 'Sem título';
                   final publishedDate = post['published'] ?? '';
                   final formattedDate = widget.formatDate(publishedDate);
 
-                  var imageUrl =
-                      post['images']?.isNotEmpty == true
-                          ? post['images']![0]['url'] ?? ''
-                          : '';
+                  var imageUrl = post['images']?.isNotEmpty == true
+                      ? post['images']![0]['url'] ?? ''
+                      : '';
 
                   if (imageUrl.isEmpty) {
                     final content = post['content'] ?? '';
@@ -257,15 +247,13 @@ class _PostListWidgetState extends State<PostListWidget> {
                             CachedNetworkImage(
                               imageUrl: imageUrl,
                               fit: BoxFit.cover,
-                              placeholder:
-                                  (context, url) => Shimmer.fromColors(
-                                    baseColor: Colors.grey[300]!,
-                                    highlightColor: Colors.grey[100]!,
-                                    child: Container(color: Colors.white),
-                                  ),
-                              errorWidget:
-                                  (context, url, error) =>
-                                      const Icon(Icons.error_outline),
+                              placeholder: (context, url) => Shimmer.fromColors(
+                                baseColor: Colors.grey[300]!,
+                                highlightColor: Colors.grey[100]!,
+                                child: Container(color: Colors.white),
+                              ),
+                              errorWidget: (context, url, error) =>
+                                  const Icon(Icons.error_outline),
                             ),
                             Container(
                               decoration: BoxDecoration(
@@ -300,31 +288,31 @@ class _PostListWidgetState extends State<PostListWidget> {
                                   children: [
                                     Text(
                                       title,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodyLarge?.copyWith(
-                                        color:
-                                            Theme.of(
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyLarge
+                                          ?.copyWith(
+                                            color: Theme.of(
                                               context,
                                             ).colorScheme.onSurface,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                       maxLines: 2,
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       formattedDate,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodyLarge?.copyWith(
-                                        color:
-                                            Theme.of(
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyLarge
+                                          ?.copyWith(
+                                            color: Theme.of(
                                               context,
                                             ).colorScheme.onSurface,
-                                        fontSize: 12,
-                                      ),
+                                            fontSize: 12,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -361,10 +349,9 @@ class _PostListWidgetState extends State<PostListWidget> {
 
                   return _buildPostItem(postIndex);
                 },
-                childCount:
-                    widget.filteredPosts.length >= 3
-                        ? widget.filteredPosts.length - 3
-                        : 0,
+                childCount: widget.filteredPosts.length >= 3
+                    ? widget.filteredPosts.length - 3
+                    : 0,
               ),
             ),
           ),

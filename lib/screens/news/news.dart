@@ -9,7 +9,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:projectx/l10n/app_localizations.dart';
-import 'package:projectx/screens/newsdroid/posts/posts_details.dart';
+import 'package:projectx/screens/news/posts/posts_details.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';

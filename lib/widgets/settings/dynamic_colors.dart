@@ -20,7 +20,7 @@ class _DynamicColorsSettingsState extends State<DynamicColorsSettings> {
       title: Text(AppLocalizations.of(context)!.dynamicColors),
       subtitle: Text(AppLocalizations.of(context)!.dynamicColorsSub),
       trailing: Switch(
-        activeColor: Colors.blue,
+        activeThumbColor: Colors.blue,
         value: themeModel.isDynamicColorsEnabled,
         onChanged: (value) {
           themeModel.toggleDynamicColors();

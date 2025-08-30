@@ -122,7 +122,7 @@ class ItemsService {
         if (a.isCompleted != b.isCompleted) return a.isCompleted ? 1 : -1;
         final aDate = a.dateTime ?? a.createdAt?.toDate() ?? DateTime(1970);
         final bDate = b.dateTime ?? b.createdAt?.toDate() ?? DateTime(1970);
-        return bDate.compareTo(aDate); // Mais recentes primeiro
+        return bDate.compareTo(aDate);
       });
       return combined;
     });

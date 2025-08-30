@@ -3,32 +3,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:projectx/service/tasks.dart';
-import 'package:uuid/uuid.dart';
 import 'dart:ui';
 
 class ChatMessage {
-  final String id;
   final Role role;
-  final String? content;
-  final List<Task>? tasks;
-  final String name;
+  String? content;
+  final String? name;
   final bool isLoading;
+  final String id;
+  final List<Task>? tasks;
 
   ChatMessage({
     required this.role,
     this.content,
-    this.tasks,
-    required this.name,
+    this.name,
     this.isLoading = false,
-  }) : id = const Uuid().v4(),
-       assert(
-         content != null || tasks != null,
-         'Message must have content or a list of tasks.',
-       ),
-       assert(
-         content == null || tasks == null,
-         'Message cannot have both content and tasks.',
-       );
+    String? id,
+    this.tasks,
+  }) : id = id ?? UniqueKey().toString();
 }
 
 enum Role { user, iA }

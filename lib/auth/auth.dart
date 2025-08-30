@@ -9,7 +9,6 @@ class AuthService {
 
   Future<User?> signInWithGoogle() async {
     try {
-      // Verificação de conectividade continua válida para ambas as plataformas
       final connectivityResults = await Connectivity().checkConnectivity();
       if (connectivityResults.contains(ConnectivityResult.none)) {
         if (kDebugMode) print("Sem conexão com a internet");
@@ -17,9 +16,7 @@ class AuthService {
       }
 
       if (kIsWeb) {
-        // --- LÓGICA PARA WEB ---
         GoogleAuthProvider googleProvider = GoogleAuthProvider();
-        // signInWithPopup é o método mais confiável para navegadores
         final UserCredential userCredential = await _auth.signInWithPopup(
           googleProvider,
         );
@@ -30,7 +27,6 @@ class AuthService {
         }
         return userCredential.user;
       } else {
-        // --- LÓGICA PARA MOBILE ---
         final GoogleSignInAccount? googleSignInAccount = await _googleSignIn
             .signIn();
         if (googleSignInAccount == null) {
@@ -86,7 +82,6 @@ class AuthService {
     }
   }
 
-  // Função para logout
   Future<void> signOut() async {
     try {
       if (kIsWeb) {
@@ -101,11 +96,9 @@ class AuthService {
     }
   }
 
-  // Função para obter o usuário atualmente autenticado
   Future<User?> currentUser() async {
     return _auth.currentUser;
   }
 
-  // Stream para monitorar alterações no estado de autenticação do usuário
   Stream<User?> authStateChanges() => _auth.authStateChanges();
 }

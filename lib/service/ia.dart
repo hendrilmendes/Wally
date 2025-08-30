@@ -18,7 +18,7 @@ class AIService {
         modelName = "google/gemini-2.0-flash-exp:free";
         break;
       case AiModelType.smart:
-        modelName = "meta-llama/llama-4-maverick:free";
+        modelName = "deepseek/deepseek-r1:free";
         break;
     }
 
